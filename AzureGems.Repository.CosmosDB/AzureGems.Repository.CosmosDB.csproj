@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Company>AzureGems</Company>
+    <Authors>William Liebenberg</Authors>
+    <PackageProjectUrl>https://azuregems.io</PackageProjectUrl>
+    <PackageTags>CosmosDB Repository</PackageTags>
+    <RepositoryUrl>https://github.com/william-liebenberg/AzureGems</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>Cosmos DB implementation for the Repository pattern.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>William Liebenberg</Copyright>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AzureGems.CosmosDB" Version="1.0.0" />
+    <PackageReference Include="AzureGems.Repository.Abstractions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AzureGems.CosmosDB\AzureGems.CosmosDB.csproj" />
+    <ProjectReference Include="..\AzureGems.Repository.Abstractions\AzureGems.Repository.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

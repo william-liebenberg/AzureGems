@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Company>AzureGems</Company>
+    <Authors>William Liebenberg</Authors>
+    <PackageProjectUrl>https://azuregems.io</PackageProjectUrl>
+    <PackageTags>SpendOps Abstractions</PackageTags>
+    <RepositoryUrl>https://github.com/william-liebenberg/AzureGems</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>Abstractions for SpendOps extensions.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>William Liebenberg</Copyright>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AzureGems.CosmosDB" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AzureGems.CosmosDB\AzureGems.CosmosDB.csproj" />
+  </ItemGroup>
+  
+
+</Project>

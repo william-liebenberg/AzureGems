@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Company>AzureGems</Company>
+    <Authors>William Liebenberg</Authors>
+    <PackageProjectUrl>https://azuregems.io</PackageProjectUrl>
+    <PackageTags>SpendOps CosmosDB ChargeTracking TableStorage</PackageTags>
+    <RepositoryUrl>https://github.com/william-liebenberg/AzureGems</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>Azure Table Storage based SpendOps Charge Tracker for AzureGems Cosmos DB.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>William Liebenberg</Copyright>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AzureGems.SpendOps.CosmosDB" Version="1.0.0" />
+    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AzureGems.SpendOps.CosmosDB\AzureGems.SpendOps.CosmosDB.csproj" />
+  </ItemGroup>
+
+</Project>
