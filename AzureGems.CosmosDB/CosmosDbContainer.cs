@@ -90,13 +90,29 @@ namespace AzureGems.CosmosDB
 			{
 				pk = new PartitionKey(partitionKey);
 			}
-
+						
 			Stopwatch watch = Stopwatch.StartNew();
-			ItemResponse<T> response = await _container.ReadItemAsync<T>(id, pk);
-			watch.Stop();
 
-			CosmosDbResponse<T> result = response.ToCosmosDbResponse(watch.Elapsed);
-			return result;
+			try
+			{
+				ItemResponse<T> response = await _container.ReadItemAsync<T>(id, pk);
+				watch.Stop();
+
+				CosmosDbResponse<T> result = response.ToCosmosDbResponse(watch.Elapsed);
+				return result;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				return new CosmosDbResponse<T>()
+				{
+					ActivityId = cex.ActivityId,
+					StatusCode = cex.StatusCode,
+					RequestCharge = cex.RequestCharge,
+					Error = cex,
+					ExecutionTime = watch.Elapsed
+				};
+			}
 		}
 
 		public async Task<CosmosDbResponse<IEnumerable<T>>> Get<T>(Expression<Func<T, bool>> predicate)
