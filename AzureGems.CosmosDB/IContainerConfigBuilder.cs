@@ -3,6 +3,6 @@
 	public interface IContainerConfigBuilder
 	{
 		IContainerConfigBuilder AddContainer(ContainerDefinition containerDefinition);
-		IContainerConfigBuilder AddContainer<T>(string containerId, string partitionKeyPath = "/pk", int ? throughput = null, bool queryByDiscriminator = true);
+		IContainerConfigBuilder AddContainer<T>(string containerId, string partitionKeyPath = "/id", int ? throughput = null, bool queryByDiscriminator = true);
 	}
 }

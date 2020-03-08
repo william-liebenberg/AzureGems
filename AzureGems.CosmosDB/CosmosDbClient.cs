@@ -41,8 +41,8 @@ namespace AzureGems.CosmosDB
 
 		public CosmosDbClient(
 			IServiceProvider serviceProvider,
-			CosmosDbConnection connection,
-			CosmosDbConfig dbConfig,
+			CosmosDbConnectionSettings connectionSettings,
+			CosmosDbDatabaseConfig dbDatabaseConfig,
 			IEnumerable<ContainerDefinition> containerDefinitions)
 		{
 			this.ServiceProvider = serviceProvider;
@@ -51,8 +51,8 @@ namespace AzureGems.CosmosDB
 			_containerDefinitions = definitions.ToArray();
 
 			_sdkClient = new CosmosClient(
-				connection.EndPoint,
-				connection.AuthKey,
+				connectionSettings.EndPoint,
+				connectionSettings.AuthKey,
 				new CosmosClientOptions()
 				{
 					ConnectionMode = ConnectionMode.Direct,
@@ -65,7 +65,7 @@ namespace AzureGems.CosmosDB
 
 			_lazyDatabase = new AsyncLazy<Database>(async () =>
 			{
-				DatabaseResponse resp = await _sdkClient.CreateDatabaseIfNotExistsAsync(dbConfig.DatabaseId, dbConfig.Throughput);
+				DatabaseResponse resp = await _sdkClient.CreateDatabaseIfNotExistsAsync(dbDatabaseConfig.DatabaseId, dbDatabaseConfig.SharedThroughput);
 
 				foreach (ContainerDefinition containerDefinition in definitions)
 				{
