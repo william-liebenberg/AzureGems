@@ -38,12 +38,20 @@ namespace AzureGems.Repository.CosmosDB
 			return _pkvResolver.ResolvePartitionKeyValue(Container.Definition.PartitionKeyPath, entity);
 		}
 
-		private async Task<IEnumerable<TDomainEntity>> Resolve(IQueryable<TDomainEntity> query)
+		private async Task<IEnumerable<TResult>> Resolve<TResult>(IQueryable<TResult> query)
 		{
-			CosmosDbResponse<IEnumerable<TDomainEntity>> resolvedQuery = await Container.Resolve(query);
+			CosmosDbResponse<IEnumerable<TResult>> resolvedQuery = await Container.Resolve(query);
 			return resolvedQuery.Result;
 		}
-		
+
+		public async Task<IEnumerable<TResult>> Query<TResult>(Expression<Func<IQueryable<TDomainEntity>, IQueryable<TResult>>> queryExpression)
+		{
+			IQueryable<TDomainEntity> query = Container.GetByLinq<TDomainEntity>();
+			IQueryable<TResult> q = queryExpression.Compile().Invoke(query);
+			return await Resolve(q);
+		}
+
+
 		public async Task<IEnumerable<TDomainEntity>> Get(Expression<Func<TDomainEntity, bool>> predicate)
 		{
 			IQueryable<TDomainEntity> query = Container.GetByLinq<TDomainEntity>()
