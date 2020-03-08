@@ -13,8 +13,6 @@ namespace AzureGems.Repository.Abstractions
 		Task<TEntity> Add(TEntity entity);
 		Task<TEntity> Update(TEntity entity);
 		Task<TEntity> Delete(TEntity entity);
-
-
 		Task<IEnumerable<TResult>> Query<TResult>(Expression<Func<IQueryable<TEntity>, IQueryable<TResult>>> queryExpression);
 	}
 }
