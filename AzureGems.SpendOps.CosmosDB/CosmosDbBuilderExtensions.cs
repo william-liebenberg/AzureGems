@@ -23,7 +23,7 @@ namespace AzureGems.SpendOps.CosmosDB
 		/// </summary>
 		/// <typeparam name="TChargeType">The charge type (e.g. <see cref="CosmosDbChargedResponse"/>)</typeparam>
 		/// <typeparam name="TTrackerImplementation"></typeparam>
-		/// <returns>The <see cref="CosmosDbBuilder"/></returns>
+		/// <returns>The <see cref="CosmosDbClientBuilder"/></returns>
 		public static IServiceCollection UseChargeTracker<TChargeType, TTrackerImplementation>(this IServiceCollection services)
 			where TTrackerImplementation : IChargeTracker<TChargeType>
 		{
@@ -38,7 +38,7 @@ namespace AzureGems.SpendOps.CosmosDB
 		/// </summary>
 		/// <typeparam name="TChargeType">The charge type (e.g. <see cref="CosmosDbChargedResponse"/>)</typeparam>
 		/// <typeparam name="TTrackerImplementation"></typeparam>
-		/// <returns>The <see cref="CosmosDbBuilder"/></returns>
+		/// <returns>The <see cref="CosmosDbClientBuilder"/></returns>
 		public static IServiceCollection UseSpendTestChargeTracker<TChargeType, TTrackerImplementation>(this IServiceCollection services)
 			where TTrackerImplementation : ISpendTestChargeTracker<TChargeType>
 		{

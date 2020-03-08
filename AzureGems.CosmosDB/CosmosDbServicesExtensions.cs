@@ -7,22 +7,22 @@ namespace AzureGems.CosmosDB
 {
 	public static class CosmosDbServicesExtensions
 	{
-		public static IServiceCollection AddCosmosDb(this IServiceCollection services, Action<CosmosDbBuilder> configure)
+		public static IServiceCollection AddCosmosDb(this IServiceCollection services, Action<CosmosDbClientBuilder> configure = null)
 		{
 			services.TryAddSingleton<ICosmosDbContainerFactory, CosmosDbContainerFactory>();
 
 			services.AddTransient(provider =>
 			{
 				var config = provider.GetRequiredService<IConfiguration>();
-				CosmosDbBuilder builder = new CosmosDbBuilder(services)
+				CosmosDbClientBuilder builder = new CosmosDbClientBuilder(services)
 					.ReadConfiguration(config);
 
-				configure(builder);
+				configure?.Invoke(builder);
 
 				return builder;
 			});
 
-			services.AddSingleton<ICosmosDbClient>(provider => provider.GetRequiredService<CosmosDbBuilder>().Build());
+			services.AddSingleton<ICosmosDbClient>(provider => provider.GetRequiredService<CosmosDbClientBuilder>().Build());
 
 			return services;
 		}

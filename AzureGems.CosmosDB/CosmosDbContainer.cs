@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AzureGems.CosmosDB
 {
@@ -35,17 +39,21 @@ namespace AzureGems.CosmosDB
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			ItemResponse<T> response = await _container.CreateItemAsync(entity, pk, new ItemRequestOptions()
+			try
 			{
-				IndexingDirective = IndexingDirective.Default
-			});
+				ItemResponse<T> itemResponse = await _container.CreateItemAsync(entity, pk);
+				watch.Stop();
 
-			watch.Stop();
-
-			CosmosDbResponse<T> result = response.ToCosmosDbResponse(watch.Elapsed);
-			return result;
+				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
+				return response;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				return cex.ToCosmosDbResponse<T>(watch.Elapsed);
+			}
 		}
-		
+
 		public async Task<CosmosDbResponse<T>> Update<T>(string partitionKey, T entity)
 		{
 			PartitionKey pk = PartitionKey.Null;
@@ -55,11 +63,20 @@ namespace AzureGems.CosmosDB
 			}
 
 			Stopwatch watch = Stopwatch.StartNew();
-			ItemResponse<T> response = await _container.UpsertItemAsync(entity, pk);
-			watch.Stop();
-			
-			CosmosDbResponse<T> result = response.ToCosmosDbResponse(watch.Elapsed);
-			return result;
+
+			try
+			{
+				ItemResponse<T> itemResponse = await _container.UpsertItemAsync(entity, pk);
+				watch.Stop();
+
+				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
+				return response;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				return cex.ToCosmosDbResponse<T>(watch.Elapsed);
+			}
 		}
 
 		public async Task<CosmosDbResponse<T>> Delete<T>(string partitionKey, string id)
@@ -71,11 +88,20 @@ namespace AzureGems.CosmosDB
 			}
 
 			Stopwatch watch = Stopwatch.StartNew();
-			ItemResponse<T> response = await _container.DeleteItemAsync<T>(id, pk);
-			watch.Stop();
-			
-			CosmosDbResponse<T> result = response.ToCosmosDbResponse(watch.Elapsed);
-			return result;
+
+			try
+			{
+				ItemResponse<T> itemResponse = await _container.DeleteItemAsync<T>(id, pk);
+				watch.Stop();
+
+				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
+				return response;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				return cex.ToCosmosDbResponse<T>(watch.Elapsed);
+			}
 		}
 
 		public async Task<CosmosDbResponse<T>> Get<T>(string id)
@@ -90,28 +116,21 @@ namespace AzureGems.CosmosDB
 			{
 				pk = new PartitionKey(partitionKey);
 			}
-						
+
 			Stopwatch watch = Stopwatch.StartNew();
 
 			try
 			{
-				ItemResponse<T> response = await _container.ReadItemAsync<T>(id, pk);
+				ItemResponse<T> itemResponse = await _container.ReadItemAsync<T>(id, pk);
 				watch.Stop();
 
-				CosmosDbResponse<T> result = response.ToCosmosDbResponse(watch.Elapsed);
-				return result;
+				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
+				return response;
 			}
 			catch (CosmosException cex)
 			{
 				watch.Stop();
-				return new CosmosDbResponse<T>()
-				{
-					ActivityId = cex.ActivityId,
-					StatusCode = cex.StatusCode,
-					RequestCharge = cex.RequestCharge,
-					Error = cex,
-					ExecutionTime = watch.Elapsed
-				};
+				return cex.ToCosmosDbResponse<T>(watch.Elapsed);
 			}
 		}
 
@@ -129,29 +148,46 @@ namespace AzureGems.CosmosDB
 
 		public async Task<CosmosDbResponse<IEnumerable<T>>> GetAll<T>()
 		{
-			var result = new CosmosDbResponse<IEnumerable<T>>();
+			var response = new CosmosDbResponse<IEnumerable<T>>();
 			var results = new List<T>();
 
 			Stopwatch watch = Stopwatch.StartNew();
 
-			FeedIterator<T> resultSet = _container.GetItemQueryIterator<T>();
-			while (resultSet.HasMoreResults)
+			try
 			{
-				FeedResponse<T> response = await resultSet.ReadNextAsync();
-				results.AddRange(response);
-				
-				result.RequestCharge += response.RequestCharge;
-				result.ActivityId = response.ActivityId;
-				result.ETag = response.ETag;
+				FeedIterator<T> resultSet = _container.GetItemQueryIterator<T>();
+				while (resultSet.HasMoreResults)
+				{
+					FeedResponse<T> feedResponse = await resultSet.ReadNextAsync();
+					results.AddRange(feedResponse);
+
+					response.RequestCharge += feedResponse.RequestCharge;
+					response.ActivityId = feedResponse.ActivityId;
+					response.ETag = feedResponse.ETag;
+					response.Diagnostics = feedResponse.Diagnostics.ToString();
+				}
+
+				watch.Stop();
+
+				response.ExecutionTime = watch.Elapsed;
+				response.StatusCode = HttpStatusCode.OK;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				response.Error = cex;
+				response.ActivityId = cex.ActivityId;
+				response.StatusCode = cex.StatusCode;
+				response.RequestCharge += cex.RequestCharge;
+				response.Diagnostics = cex.Diagnostics.ToString();
+			}
+			finally
+			{
+				response.ExecutionTime = watch.Elapsed;
+				response.Result = results;
 			}
 
-			watch.Stop();
-
-			result.ExecutionTime = watch.Elapsed;
-			result.Result = results;
-			result.StatusCode = HttpStatusCode.OK;
-
-			return result;
+			return response;
 		}
 		
 		public Task<CosmosDbResponse<IEnumerable<T>>> GetByQuery<T>(string query)
@@ -183,44 +219,48 @@ namespace AzureGems.CosmosDB
 				options.PartitionKey = new PartitionKey(partitionKey);
 			}
 
-			var result = new CosmosDbResponse<IEnumerable<T>>();
-			var dataResults = new List<T>();
+			var response = new CosmosDbResponse<IEnumerable<T>>();
+			var results = new List<T>();
 			Stopwatch watch = Stopwatch.StartNew();
 
-			FeedIterator<T> resultSetIterator = _container.GetItemQueryIterator<T>(queryDef, requestOptions: options);
-			while (resultSetIterator.HasMoreResults)
+			try
 			{
-				FeedResponse<T> response = await resultSetIterator.ReadNextAsync();
-				dataResults.AddRange(response);
+				FeedIterator<T> resultSetIterator = _container.GetItemQueryIterator<T>(queryDef, requestOptions: options);
+				while (resultSetIterator.HasMoreResults)
+				{
+					FeedResponse<T> feedResponse = await resultSetIterator.ReadNextAsync();
+					results.AddRange(feedResponse);
 
-				result.RequestCharge += response.RequestCharge;
-				result.ActivityId = response.ActivityId;
-				result.ETag = response.ETag;
+					response.RequestCharge += feedResponse.RequestCharge;
+					response.ActivityId = feedResponse.ActivityId;
+					response.ETag = feedResponse.ETag;
+					response.Diagnostics = feedResponse.Diagnostics.ToString();
+				}
+
+				watch.Stop();
+				response.StatusCode = HttpStatusCode.OK;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				response.Error = cex;
+				response.ActivityId = cex.ActivityId;
+				response.StatusCode = cex.StatusCode;
+				response.RequestCharge += cex.RequestCharge;
+				response.Diagnostics = cex.Diagnostics.ToString();
+			}
+			finally
+			{
+				response.ExecutionTime = watch.Elapsed;
+				response.Result = results;
 			}
 
-			watch.Stop();
-
-			result.ExecutionTime = watch.Elapsed;
-			result.Result = dataResults;
-			result.StatusCode = HttpStatusCode.OK;
-
-			return result;
+			return response;
 		}
 
 		public IQueryable<T> GetByLinq<T>()
 		{
-			PartitionKey pk = PartitionKey.Null;
-
-			var options = new QueryRequestOptions
-			{
-				PartitionKey = pk
-			};
-
-			return _container.GetItemLinqQueryable<T>(
-				allowSynchronousQueryExecution: true,
-				continuationToken: null,
-				requestOptions: options)
-				.WithDiscriminator(Definition.EntityType.Name);
+			return GetByLinq<T>(null);
 		}
 
 		public IQueryable<T> GetByLinq<T>(string partitionKey)
@@ -236,42 +276,73 @@ namespace AzureGems.CosmosDB
 				PartitionKey = pk
 			};
 
-			return _container.GetItemLinqQueryable<T>(
+			IQueryable<T> query = _container.GetItemLinqQueryable<T>(
 				allowSynchronousQueryExecution: true,
 				continuationToken: null,
-				requestOptions: options)
-				.WithDiscriminator(Definition.EntityType.Name);
+				requestOptions: options);
+
+			if (Definition.QueryByDiscriminator)
+			{
+				query = query.WithDiscriminator(Definition.EntityType.Name);
+			}
+
+			return query;
 		}
+		
+		/// <summary>
+		/// use old fashioned string matching to rip out the select caluse and replace with a select count
+		/// </summary>
+		/// <param name="text"></param>
+		/// <returns></returns>
+		/// <exception cref="NotImplementedException"></exception>
+		private static string ConvertToCountQuery(string text)
+		{
+			int fromPosition = text.IndexOf("FROM", StringComparison.InvariantCulture);
+			return "SELECT count(1) " + text.Substring(fromPosition);
+		}
+
 
 		public async Task<CosmosDbResponse<IEnumerable<T>>> Resolve<T>(IQueryable<T> query)
 		{
-			var result = new CosmosDbResponse<IEnumerable<T>>();
+			var response = new CosmosDbResponse<IEnumerable<T>>();
 			var results = new List<T>();
 
 			Stopwatch watch = Stopwatch.StartNew();
-
-			// FeedIterator<T> iterator = query.ToFeedIterator(); // << NOT WORKING!!
-
-			QueryDefinition queryDef = query.ToQueryDefinition();
-			FeedIterator<T> iterator = _container.GetItemQueryIterator<T>(queryDef);
-
-			while (iterator.HasMoreResults)
+            try
 			{
-				FeedResponse<T> response = await iterator.ReadNextAsync();
-				results.AddRange(response);
+				QueryDefinition queryDef = query.ToQueryDefinition();
+				FeedIterator<T> feedIterator = _container.GetItemQueryIterator<T>(queryDef);
+				
+				while (feedIterator.HasMoreResults)
+				{
+					FeedResponse<T> feedResponse = await feedIterator.ReadNextAsync();
+					results.AddRange(feedResponse);
+				
+					response.RequestCharge += feedResponse.RequestCharge;
+					response.ActivityId = feedResponse.ActivityId;
+					response.ETag = feedResponse.ETag;
+					response.Diagnostics = feedResponse.Diagnostics.ToString();
+				}
 
-				result.RequestCharge += response.RequestCharge;
-				result.ActivityId = response.ActivityId;
-				result.ETag = response.ETag;
+				watch.Stop();
+				response.StatusCode = HttpStatusCode.OK;
+			}
+			catch(CosmosException cex)
+			{
+				watch.Stop();
+				response.Error = cex;
+				response.ActivityId = cex.ActivityId;
+				response.StatusCode = cex.StatusCode;
+				response.RequestCharge += cex.RequestCharge;
+				response.Diagnostics = cex.Diagnostics.ToString();
+			}
+			finally
+			{
+				response.ExecutionTime = watch.Elapsed;
+				response.Result = results;
 			}
 
-			watch.Stop();
-
-			result.ExecutionTime = watch.Elapsed;
-			result.Result = results;
-			result.StatusCode = HttpStatusCode.OK;
-
-			return result;
+			return response;
 		}
 	}
 }

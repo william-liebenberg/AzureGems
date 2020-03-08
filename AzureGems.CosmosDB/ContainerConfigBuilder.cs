@@ -12,10 +12,10 @@ namespace AzureGems.CosmosDB
 			return this;
 		}
 
-		public IContainerConfigBuilder AddContainer<T>(string containerId, string partitionKeyPath, int? throughput)
+		public IContainerConfigBuilder AddContainer<T>(string containerId, string partitionKeyPath, int? throughput, bool queryByDiscriminator = true)
 		{
 			_containerDefinitions.Add(
-				new ContainerDefinition(containerId, partitionKeyPath, typeof(T), throughput)
+				new ContainerDefinition(containerId, partitionKeyPath, typeof(T), throughput, queryByDiscriminator)
 				{});
 			return this;
 		}

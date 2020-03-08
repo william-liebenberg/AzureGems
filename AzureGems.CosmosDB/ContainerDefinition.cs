@@ -4,15 +4,16 @@ namespace AzureGems.CosmosDB
 {
 	public class ContainerDefinition : IContainerDefinition
 	{
-		public ContainerDefinition(string containerId, string partitionKeyPath, Type entityType)
+		public ContainerDefinition(string containerId, string partitionKeyPath, Type entityType, bool queryByDiscriminator = true)
 		{
 			ContainerId = containerId;
 			PartitionKeyPath = partitionKeyPath;
 			EntityType = entityType;
+			QueryByDiscriminator = queryByDiscriminator;
 		}
 
-		public ContainerDefinition(string containerId, string partitionKeyPath, Type entityType, int? throughput)
-			: this(containerId, partitionKeyPath, entityType)
+		public ContainerDefinition(string containerId, string partitionKeyPath, Type entityType, int? throughput, bool queryByDiscriminator = true)
+			: this(containerId, partitionKeyPath, entityType, queryByDiscriminator)
 		{
 			Throughput = throughput;
 		}
@@ -21,5 +22,6 @@ namespace AzureGems.CosmosDB
 		public string ContainerId { get; }
 		public string PartitionKeyPath { get; }
 		public int? Throughput { get; }
+		public bool QueryByDiscriminator { get; }
 	}
 }

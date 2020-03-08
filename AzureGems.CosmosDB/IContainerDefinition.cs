@@ -8,5 +8,6 @@ namespace AzureGems.CosmosDB
 		Type EntityType { get; }
 		string PartitionKeyPath { get; }
 		int? Throughput { get; }
+		bool QueryByDiscriminator { get; }
 	}
 }

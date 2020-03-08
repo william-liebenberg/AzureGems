@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +9,6 @@ namespace AzureGems.CosmosDB
 {
 	public class CosmosDbClient : ICosmosDbClient, IDisposable
 	{
-		// TODO: Swap to Dictionary<?????, ContainerDefinition>
 		private readonly ContainerDefinition[] _containerDefinitions;
 
 		private readonly CosmosClient _sdkClient;
@@ -96,17 +96,20 @@ namespace AzureGems.CosmosDB
 		private async Task<Container> Internal_GetContainer(string containerId)
 		{
 			Database database = await GetDatabase();
-
-			// TODO: Should we cache the containers instead of quering Cosmos each time
 			Container container = database.GetContainer(containerId);
 			return container;
 		}
 
+		private readonly ConcurrentDictionary<string, ICosmosDbContainer> _containerCache = new ConcurrentDictionary<string, ICosmosDbContainer>();
+
 		public async Task<ICosmosDbContainer> GetContainer(string containerId)
 		{
-			Container container = await Internal_GetContainer(containerId);
-			ContainerDefinition definition = GetContainerDefinition(containerId);
-			return new CosmosDbContainer(definition, this, container);
+			return await _containerCache.GetOrAddAsync<string, ICosmosDbContainer>(containerId, async id =>
+			{
+				Container container = await Internal_GetContainer(containerId);
+				ContainerDefinition definition = GetContainerDefinition(containerId);
+				return new CosmosDbContainer(definition, this, container);
+			});
 		}
 
 		public async Task<ICosmosDbContainer> GetContainer<TEntity>()

@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 	
 namespace AzureGems.CosmosDB
 {
-	public class CosmosDbBuilder
+	public class CosmosDbClientBuilder
 	{
 		public IServiceCollection Services { get; }
 
@@ -13,25 +13,25 @@ namespace AzureGems.CosmosDB
 		private CosmosDbConnection _connection = null;
 		private CosmosDbConfig _dbconfig = null;
 
-		public CosmosDbBuilder(IServiceCollection services)
+		public CosmosDbClientBuilder(IServiceCollection services)
 		{
 			Services = services;
 		}
 
-		public CosmosDbBuilder ReadConfiguration(IConfiguration config)
+		public CosmosDbClientBuilder ReadConfiguration(IConfiguration config)
 		{
 			_connection = new CosmosDbConnection(config);
 			_dbconfig = new CosmosDbConfig(config);
 			return this;
 		}
 
-		public CosmosDbBuilder UseDatabase(string databaseId)
+		public CosmosDbClientBuilder UseDatabase(string databaseId)
 		{
 			_dbconfig = new CosmosDbConfig(databaseId, null);
 			return this;
 		}
 
-		public CosmosDbBuilder WithDatabaseThroughput(int throughput)
+		public CosmosDbClientBuilder WithDatabaseThroughput(int throughput)
 		{
 			_dbconfig = _dbconfig != null ?
 				new CosmosDbConfig(_dbconfig.DatabaseId, throughput)
@@ -41,7 +41,7 @@ namespace AzureGems.CosmosDB
 			return this;
 		}
 
-		public CosmosDbBuilder ConnectUsing(string endPoint, string authKey)
+		public CosmosDbClientBuilder ConnectUsing(string endPoint, string authKey)
 		{
 			_connection = new CosmosDbConnection(endPoint, authKey);
 			return this;
@@ -51,8 +51,8 @@ namespace AzureGems.CosmosDB
 		/// Set up the names, partition key paths, and optional throughput requirements for your CosmosDB containers.
 		/// </summary>
 		/// <param name="containerConfigBuilder">The Container Config Builder</param>
-		/// <returns>The <see cref="CosmosDbBuilder"/></returns>
-		public CosmosDbBuilder ContainerConfig(Action<IContainerConfigBuilder> containerConfigBuilder)
+		/// <returns>The <see cref="CosmosDbClientBuilder"/></returns>
+		public CosmosDbClientBuilder ContainerConfig(Action<IContainerConfigBuilder> containerConfigBuilder)
 		{
 			var builder = new ContainerConfigBuilder();
 			containerConfigBuilder(builder);

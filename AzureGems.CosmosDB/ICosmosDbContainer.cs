@@ -28,6 +28,7 @@ namespace AzureGems.CosmosDB
 
 		IQueryable<T> GetByLinq<T>();
 		IQueryable<T> GetByLinq<T>(string partitionKey);
+		
 		Task<CosmosDbResponse<IEnumerable<T>>> Resolve<T>(IQueryable<T> query);
 	}
 }

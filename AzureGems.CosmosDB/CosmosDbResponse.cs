@@ -19,6 +19,8 @@ namespace AzureGems.CosmosDB
 
 		public string ActivityId { get; set; }
 		public string ETag { get; set; }
+
+		public string Diagnostics { get; set; }
 	}
 
 	public class CosmosDbResponse<T> : CosmosDbResponse
