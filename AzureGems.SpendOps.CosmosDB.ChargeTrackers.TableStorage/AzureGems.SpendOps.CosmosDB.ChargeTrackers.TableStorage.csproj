@@ -14,14 +14,14 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>William Liebenberg</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
-    <Version>1.1.1</Version>
+    <AssemblyVersion>1.2.1</AssemblyVersion>
+    <FileVersion>1.2.1</FileVersion>
+    <Version>1.2.1</Version>
     <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AzureGems.SpendOps.CosmosDB" Version="1.1.1" />
+    <PackageReference Include="AzureGems.SpendOps.CosmosDB" Version="1.2.1" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
   </ItemGroup>
 
