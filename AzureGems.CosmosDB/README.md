@@ -1,40 +1,18 @@
 # AzureGems.CosmosDb
-Easy to use CosmosDB library.
 
+Easy to use CosmosDb library.
+
+The purpose of this library was firstly to learn the Cosmos Db SDK, but then evolved into a helper library to help deal with the rapid changes being made to the SDK. 
+
+It also serves as an example of applying [#SpendOps](https://azuregems.io/spendops-with-azure-cosmos-db/) to your Cosmos DB usage so that you can be armed with good metrics to predict your budget and track the cost of code changes before releasing the code into Production.
+
+The accompanying library called [AzureGems.SpendOps.CosmosDB](https://github.com/william-liebenberg/AzureGems/tree/master/AzureGems.SpendOps.CosmosDB) goes into more detail for adding [#SpendOps](https://azuregems.io/spendops-with-azure-cosmos-db/) to your own CosmosDb application.
 
 ## Getting Started
 
-To get started using the AzureGems.CosmosDB library, add the `AzureGems.CosmosDb` NuGet to your project. 
+To get started using the AzureGems.CosmosDB library, add the `AzureGems.CosmosDb` NuGet package to your project. 
 
-Use the following code in your `StartUp.cs` file to set up your connection and datatypes to use with CosmosDb:
-
-```csharp
-services.AddCosmosDb(builder =>
-{
-	builder
-		.UseConnection(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
-		.UseDatabase(databaseId: "MyDatabase")
-		.WithSharedThroughput(10000);
-		.WithContainerConfig(c =>
-		{
-			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 20000);
-			c.AddContainer<Receipt>(containerId: "Receipts", partitionKeyPath: "/id");
-			c.AddContainer<Widget>(containerId: "Gadgets", partitionKeyPath: "/style");
-		});
-});
-```
-
-The code above builds a `CosmosDbClient` that uses the specified connection settings, database name, shared throughput, and container configuration. 
- 
-The `ICosmosDbClient` will ensure that:
-1. a connection is established with the specified CosmosDb instance using the specified settings
-2. the database is created using the specified shared throughput (NOTE: Specifying null means you have to specify throughput for each container individually)
-3. the containers are created according to the configuration specified
-> **NOTE:** If the database/containers are created from scratch, then the new settings will be applied. However if the containers already exists, they remain untouched.
-
-The `ICosmosDbClient` is automatically added to the Dependency Injection (DI) framework that allows you to inject it into your services.
-
-## App Configuration
+### Application Configuration
 
 The CosmosDB connection settings can be specified via `appsettings.json` instead of being hard-coded. Add the `cosmosDbConnection` section to your `appsettings.json` file and include the following values:
 
@@ -50,6 +28,103 @@ The CosmosDB connection settings can be specified via `appsettings.json` instead
 ```
 
 **TODO**: Allow `ContainerConfig` to be specified via `appsettings.json`
+
+### Adding AzureGems.CosmosDb
+
+The following code can be added to `ConfigureServices()` in your `Startup.cs` file to set up your connection and datatypes to use with CosmosDb:
+
+```csharp
+services.AddCosmosDb(builder =>
+{
+	builder
+		.UseConnection(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
+		.UseDatabase(databaseId: "MyDatabase")
+		.WithSharedThroughput(10000);
+		.WithContainerConfig(c =>
+		{
+			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 20000);
+			c.AddContainer<Receipt>(containerId: "Receipts", partitionKeyPath: "/id");
+			c.AddContainer<Accessory>(containerId: "Accessories", partitionKeyPath: "/category");
+		});
+});
+```
+
+The code above builds a `CosmosDbClient` that uses the specified connection settings, database name, shared throughput, and container configuration. 
+ 
+The `ICosmosDbClient` will ensure that:
+1. a connection is established with the specified CosmosDb `databseId` using the given `endPoint` and `authKey`
+2. the database is created using the specified shared throughput (NOTE: When specifying `null` you have to explicitly configure throughput for each container individually)
+3. the containers are created according to the specified configuration that takes into account the `containerId`, `partitionKeyPath`, `queryByDiscriminator` and `throughput`
+> **NOTE:** if the database/containers already exists, they remain untouched. This configuration will only ensure creation if the resources don't already exist.
+
+The `ICosmosDbClient` is automatically added to the .NET Core `ServiceCollection` that allows you to inject it into your controllers/services.
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class VehiclesController : ControllerBase
+{
+	protected readonly ICosmosDbClient _client;
+
+	public VehiclesController(ICosmosDbClient client)
+	{
+		// keep a reference to injected client
+		_client = client;
+	}
+
+	//
+	// Use the ICosmosDbClient (this._client) in your actions
+	//
+}
+```
+
+## Creating Models
+
+Models in CosmosDb can be as simple or complex as you need them to be, as long as it is serializable to and from a JSON document.
+ 
+At the root level of every model an `Id` field of type `string` is required so that it can be looked up/retrieved directly.
+
+Optionally, a `Discriminator` field can be specified as well to help with co-locating different model types in a single CosmosDb container.
+
+```csharp
+public class Vehicle
+{
+	// required
+	[JsonProperty("id")]
+	public string Id { get; set; }
+
+	// optional
+	public string Discriminator { get; set; }
+
+	public string Brand { get; set; }
+	public string Color { get; set; }
+	public string Model { get; set; }
+	public int Cylinders { get; set; }
+	public decimal PurchasePrice { get;set; }
+}
+```
+
+An abstract base class can be used to easily add `Id` and `Discriminator` to all models in your domain.
+
+```csharp
+public abstract class BaseEntity
+{
+	[JsonProperty("id")]
+	public string Id { get; set; }
+	public string Discriminator { get; set; }
+}
+
+public class Vehicle : BaseEntity
+{
+	public string Brand { get; set; }
+	public string Color { get; set; }
+	public string Model { get; set; }
+	public int Cylinders { get; set; }
+	public decimal PurchasePrice { get;set; }
+}
+```
+
+Currently you need to specify your own ID and Discriminator values. *This will change in a future update.* 
 
 ## Accessing the CosmosDb Containers
 
@@ -67,10 +142,9 @@ ICosmosDbContainer container = await cosmosDbClient.GetContainer("Cars");
 
 ## Using the CosmosDb Containers
 
-All the CRUD methods for the CosmosDb Containers return a `CosmosDbResponse<T>` object. The resulting value can be accessed via the `.Result` property.  
+All the CRUD methods for the CosmosDb Containers are strongly typed and return a `CosmosDbResponse<T>` object. The resulting value can be accessed via the `.Result` property.  
 
 > NOTE: Anonymous types are not supported.
-
 
 ### Add
 
@@ -115,7 +189,7 @@ string query = "SELECT * FROM Cars c WHERE c.Color = 'Black'";
 CosmosDbResponse<IEnumerable<Vehicle>> blackCamaros = await container.GetByQuery<Vehicle>("Camaro", query);
 ```
 
-See the [Cosmos Db Cheatsheets](https://docs.microsoft.com/en-us/azure/cosmos-db/query-cheat-sheet) for more CoreSQL Query examples
+See the [Cosmos Db Cheatsheets](https://docs.microsoft.com/en-us/azure/cosmos-db/query-cheat-sheet) for more CoreSQL Query examples.
 
 ### LINQ Query
 
@@ -123,7 +197,7 @@ You can build up LINQ queries (just like EFCore) instead of writing CoreSQL.
 
 Use the `GetByLinq()` method to obtain an `IQueryable<T>` from the container to start building up your query. 
 
-Once you have your LINQ prepared, call the `Resolve<T>()` method to obtain your results.
+Once you have your LINQ query prepared, call the `Resolve<T>()` method to obtain your results.
  
 ```csharp
 IQueryable<Vehicle> query = container.GetByLinq<Vehicle>("Camaro")
@@ -138,12 +212,12 @@ See [Supported LINQ operators](https://docs.microsoft.com/en-us/azure/cosmos-db/
 
 > NOTE: Some Linq operators may not be supported by Cosmos Db. Although more operators are constantly being added by the Cosmos Db team.
 
-> NOTE: `Resolve<T>()` is required because `ToList()` and `ToArray()` aren't implemented on the CosmosDb LINQ provider. 
+> NOTE: `Resolve<T>()` is required because `ToList()` and `ToArray()` are currently returning `null` . 
 
 ### Update
 
 ```csharp
-TODO
+TODO: add .Update() example
 ```
 
 ###  Delete
@@ -153,6 +227,17 @@ Deleting an entity using `.Delete()` requires both the `PartitionKey` and the en
 ```csharp
 CosmosDbResponse<Vehicle> deletedCamaro = await container.Delete<Vehicle>("Camaro", "<ID VALUE>");
 ```
+
+## Future additions
+
+* [ ] Apply ID and Discriminator automatically at container level
+* [ ] Automatically resolve partition key `value` from ContainerDefinition's `PartitionKeyPath`
+* [ ] Sample applications
+* [ ] Custom RequestHandlers (extra logging, schema validation, throttling)
+* [ ] Streaming
+* [ ] Transactions
+* [ ] Container Migrations
+* [ ] Simple Relationships
 
 ## Thank you
 
