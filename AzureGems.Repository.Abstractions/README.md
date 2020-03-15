@@ -13,10 +13,10 @@ For example:
 ```csharp
 
 private readonly IRepository<Widget> _widgets;
-_
+
 public IEnumerable<Widget> GetWidgetsBelow(double price)
 {
-	return _widgets.Query(q => q.Where(w => w.SalePrice < price))'
+	return _widgets.Query(q => q.Where(w => w.SalePrice < price));
 }
 ```
 In the code above, `q` is of type `IQueryable<Widget>` and `w` is of type `Widget`.
