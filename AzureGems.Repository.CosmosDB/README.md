@@ -2,10 +2,9 @@
 
 This library provides a CosmosDb specific implementation of the AzureGems.Repository `IRepository<T>` interface.
 
-Along with the `CosmosDbContainerRepository<T>` 
+Along with the `CosmosDbContainerRepository<T>` xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 The extension method `AddCosmosDbContext<DbContext>()` allows you to define a DbContext (just like EFCore) and have it added to the `ServiceCollection` and injected into your services.
-
 
 ## Getting Started
 
@@ -18,15 +17,16 @@ Declare a public `IRepository<T>` property for each model type (aka Domain Entit
 ```csharp
 public class LittleNorthwindDbContext : DbContext
 {
-	public IRepository<Customer> Customers { get; set; }
-	public IRepository<Order> Orders { get; set; }
-	public IRepository<Invoice> Invoices { get; set; }
+    public IRepository<Customer> Customers { get; set; }
+    public IRepository<Order> Orders { get; set; }
+    public IRepository<Invoice> Invoices { get; set; }
 }
 ```
+
 > NOTE: Each model type must inherit from `BaseType` to satisfy the generic constraints for `IRepository<T>`
 
 Next, you must register your DbContext with the `ServiceCollection` which will take care of instantiating your DbContext and initializing all the repositories to be backed by the correct CosmosDb containers.
- 
+
 In `Startup.cs` you should already have added CosmosDb and specified your Container Configurations. See [Adding AzureGems.CosmosDb](https://github.com/william-liebenberg/AzureGems/tree/master/AzureGems.CosmosDB#adding-azuregemscosmosdb)
 
 Next you can register your DbContext using the `AddCosmosDbContext()` extension method:
@@ -37,7 +37,7 @@ services.AddCosmosDbContext<LittleNorthwindDbContext>();
 
 Now your DbContext is ready to be injected and used by your controllers/services.
 
-## Example Usage:
+## Example Usage
 
 ```csharp
 public class LittleNorthwindService
