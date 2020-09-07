@@ -39,7 +39,7 @@ services.AddCosmosDb(builder =>
 	builder
 		.UseConnection(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
 		.UseDatabase(databaseId: "MyDatabase")
-		.WithSharedThroughput(10000);
+		.WithSharedThroughput(10000)
 		.WithContainerConfig(c =>
 		{
 			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 20000);
