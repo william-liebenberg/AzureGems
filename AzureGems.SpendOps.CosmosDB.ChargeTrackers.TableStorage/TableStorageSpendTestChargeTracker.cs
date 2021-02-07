@@ -1,8 +1,8 @@
 ﻿using AzureGems.CosmosDB;
 using AzureGems.SpendOps.Abstractions;
-using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Azure.Cosmos.Table;
 
 namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 {

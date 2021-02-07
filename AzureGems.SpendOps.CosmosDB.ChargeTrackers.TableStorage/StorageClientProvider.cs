@@ -1,6 +1,5 @@
-﻿using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
-using System;
+﻿using System;
+using Microsoft.Azure.Cosmos.Table;
 
 namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 {
