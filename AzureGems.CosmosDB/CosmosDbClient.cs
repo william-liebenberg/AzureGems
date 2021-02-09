@@ -10,26 +10,48 @@ namespace AzureGems.CosmosDB
 	public class CosmosDbClient : ICosmosDbClient, IDisposable
 	{
 		private readonly ContainerDefinition[] _containerDefinitions;
-
+		
 		private readonly CosmosClient _sdkClient;
 		private readonly AsyncLazy<Database> _lazyDatabase;
-
-		public IServiceProvider ServiceProvider { get; }
 
 		private async Task<Database> GetDatabase()
 		{
 			return await _lazyDatabase.Value;
 		}
 
+		private readonly ICosmosDbContainerFactory _containerFactory;
+
+		private readonly ConcurrentDictionary<string, ICosmosDbContainer> _containerCache = new ConcurrentDictionary<string, ICosmosDbContainer>();
+
+		public async Task<ICosmosDbContainer> CreateContainer(ContainerDefinition containerDefinition)
+		{
+			return await _containerCache.GetOrAddAsync(containerDefinition.ContainerId, async id =>
+			{
+				Container cosmosSdkContainer = await Internal_GetContainer(containerDefinition.ContainerId);
+				ContainerDefinition definition = GetContainerDefinition(containerDefinition.ContainerId);
+				var container = new CosmosDbContainer(definition, this, cosmosSdkContainer);
+
+				if (_containerFactory != null)
+				{
+					return _containerFactory.Create(container);
+				}
+				else
+				{
+
+					return container;
+				}
+			});
+		}
+
 		public ContainerDefinition GetContainerDefinition(string containerId)
 		{
-			ContainerDefinition containerDef = _containerDefinitions.FirstOrDefault(def => def.ContainerId == containerId);
+			ContainerDefinition containerDef = _containerDefinitions.First(def => def.ContainerId == containerId);
 			return containerDef;
 		}
 
 		public ContainerDefinition GetContainerDefinitionForType(Type t)
 		{
-			ContainerDefinition containerDefForT = _containerDefinitions.FirstOrDefault(def => def.EntityType == t);
+			ContainerDefinition containerDefForT = _containerDefinitions.First(def => def.EntityType == t);
 			return containerDefForT;
 		}
 
@@ -40,12 +62,12 @@ namespace AzureGems.CosmosDB
 		}
 
 		public CosmosDbClient(
-			IServiceProvider serviceProvider,
 			CosmosDbConnectionSettings connectionSettings,
-			CosmosDbDatabaseConfig dbDatabaseConfig,
+			CosmosDbDatabaseSettings cosmosDbConfig,
+			ICosmosDbContainerFactory containerFactory,
 			IEnumerable<ContainerDefinition> containerDefinitions)
 		{
-			this.ServiceProvider = serviceProvider;
+			_containerFactory = containerFactory;
 
 			IEnumerable<ContainerDefinition> definitions = containerDefinitions as ContainerDefinition[] ?? containerDefinitions.ToArray();
 			_containerDefinitions = definitions.ToArray();
@@ -65,7 +87,7 @@ namespace AzureGems.CosmosDB
 
 			_lazyDatabase = new AsyncLazy<Database>(async () =>
 			{
-				DatabaseResponse resp = await _sdkClient.CreateDatabaseIfNotExistsAsync(dbDatabaseConfig.DatabaseId, dbDatabaseConfig.SharedThroughput);
+				DatabaseResponse resp = await _sdkClient.CreateDatabaseIfNotExistsAsync(cosmosDbConfig.DatabaseId, cosmosDbConfig.SharedThroughput);
 
 				foreach (ContainerDefinition containerDefinition in definitions)
 				{
@@ -100,16 +122,10 @@ namespace AzureGems.CosmosDB
 			return container;
 		}
 
-		private readonly ConcurrentDictionary<string, ICosmosDbContainer> _containerCache = new ConcurrentDictionary<string, ICosmosDbContainer>();
-
 		public async Task<ICosmosDbContainer> GetContainer(string containerId)
 		{
-			return await _containerCache.GetOrAddAsync<string, ICosmosDbContainer>(containerId, async id =>
-			{
-				Container container = await Internal_GetContainer(containerId);
-				ContainerDefinition definition = GetContainerDefinition(containerId);
-				return new CosmosDbContainer(definition, this, container);
-			});
+			ContainerDefinition definition = GetContainerDefinition(containerId);
+			return await this.CreateContainer(definition);
 		}
 
 		public async Task<ICosmosDbContainer> GetContainer<TEntity>()

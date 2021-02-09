@@ -1,17 +1,32 @@
 ﻿using AzureGems.CosmosDB;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using AzureGems.SpendOps.Abstractions;
 
 namespace AzureGems.SpendOps.CosmosDB
 {
 	public static class CosmosDbClientExtensions
 	{
-		public static async Task<ICosmosDbContainer> GetContainer<TEntity>(this ICosmosDbClient _client, string feature)
+		public static async Task<ICosmosDbContainer> GetContainerForFeature(this ICosmosDbClient client, string containerId, string featureToTrack)
 		{
-			var chargeTracker = _client.ServiceProvider.GetService<IChargeTracker<CosmosDbChargedResponse>>();
-			var container = await _client.GetContainer<TEntity>();
-			return new TrackedCosmosDbContainer(container.Definition, container, chargeTracker, feature);
+			ICosmosDbContainer container = await client.GetContainer(containerId);
+			TrackedCosmosDbContainer trackedContainer = container as TrackedCosmosDbContainer;
+			if (trackedContainer != null)
+			{
+				trackedContainer.Feature = featureToTrack;
+				return trackedContainer;
+			}
+			return container;
+		}
+
+		public static async Task<ICosmosDbContainer> GetContainerForFeature<TEntity>(this ICosmosDbClient client, string featureToTrack)
+		{
+			ICosmosDbContainer container = await client.GetContainer<TEntity>();
+			TrackedCosmosDbContainer trackedContainer = container as TrackedCosmosDbContainer;
+			if (trackedContainer != null)
+			{
+				trackedContainer.Feature = featureToTrack;
+				return trackedContainer;
+			}
+			return container;
 		}
 	}
 }

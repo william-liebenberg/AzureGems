@@ -8,6 +8,7 @@ namespace AzureGems.Repository.Abstractions
 {
 	public interface IRepository<TEntity> where TEntity : BaseEntity
 	{
+		Task<IEnumerable<TEntity>> GetAll();
 		Task<TEntity> GetById(string id);
 		Task<IEnumerable<TEntity>> Get(Expression<Func<TEntity, bool>> predicate);
 		Task<TEntity> Add(TEntity entity);

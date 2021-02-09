@@ -51,6 +51,11 @@ namespace AzureGems.Repository.CosmosDB
 			return await Resolve(q);
 		}
 
+		public async Task<IEnumerable<TDomainEntity>> GetAll()
+		{
+			CosmosDbResponse<IEnumerable<TDomainEntity>> response = await Container.GetAll<TDomainEntity>();
+			return response.Result;
+		}
 
 		public async Task<IEnumerable<TDomainEntity>> Get(Expression<Func<TDomainEntity, bool>> predicate)
 		{
@@ -64,7 +69,8 @@ namespace AzureGems.Repository.CosmosDB
 
 		public async Task<TDomainEntity> GetById(string id)
 		{
-			CosmosDbResponse<TDomainEntity> response = await Container.Get<TDomainEntity>(id);
+			// TODO: Passing id as pk is not the correct approach!
+			CosmosDbResponse<TDomainEntity> response = await Container.Get<TDomainEntity>(id, id);
 			return response.Result;
 		}
 
@@ -90,6 +96,14 @@ namespace AzureGems.Repository.CosmosDB
 
 		public async Task<TDomainEntity> Update(TDomainEntity entity)
 		{
+			if(string.IsNullOrWhiteSpace(entity.Id))
+			{
+				entity.Id = _idValueGenerator.Generate(entity);
+			}
+
+			// always set the entity type / Discriminator
+			entity.Discriminator = _entityType;
+
 			CosmosDbResponse<TDomainEntity> updatedEntity = await Container.Update(ResolvePartitionKeyValue(entity), entity);
 			return updatedEntity.Result;
 		}

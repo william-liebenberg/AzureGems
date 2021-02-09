@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <Company>AzureGems</Company>
     <Authors>William Liebenberg</Authors>
     <PackageProjectUrl>https://azuregems.io</PackageProjectUrl>

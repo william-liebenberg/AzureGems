@@ -1,6 +1,6 @@
 ﻿namespace AzureGems.Repository.Abstractions
 {
-	public abstract class DbContext
+	public abstract class CosmosContext
 	{
 		// Nothing to see here
 

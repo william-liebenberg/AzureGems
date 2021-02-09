@@ -14,7 +14,7 @@ namespace AzureGems.SpendOps.CosmosDB
 			{
 				ContainerId = containerId,
 				Feature = feature,
-				Context = context,
+				Tags = context,
 				StatusCode = response.StatusCode,
 				ExecutionTime = response.ExecutionTime,
 				RequestCharge = response.RequestCharge

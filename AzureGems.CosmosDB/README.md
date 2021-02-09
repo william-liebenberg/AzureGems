@@ -37,7 +37,7 @@ The following code can be added to `ConfigureServices()` in your `Startup.cs` fi
 services.AddCosmosDb(builder =>
 {
 	builder
-		.UseConnection(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
+		.Connect(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
 		.UseDatabase(databaseId: "MyDatabase")
 		.WithSharedThroughput(10000)
 		.WithContainerConfig(c =>
@@ -49,12 +49,31 @@ services.AddCosmosDb(builder =>
 });
 ```
 
-The code above builds a `CosmosDbClient` that uses the specified connection settings, database name, shared throughput, and container configuration. 
- 
+> The example above specifies all the details required to connect to the CosmosDb instance and which database to use.
+
+```csharp
+services.AddCosmosDb(builder =>
+{
+	builder
+		.WithContainerConfig(c =>
+		{
+			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 20000);
+			c.AddContainer<Receipt>(containerId: "Receipts", partitionKeyPath: "/id");
+			c.AddContainer<Accessory>(containerId: "Accessories", partitionKeyPath: "/category");
+		});
+});
+```
+
+> The example above only specifies the container configuration to use. The connection details for which CosmosDb instance and database to use are specified via the `appsettings.json` file.
+
+The code above builds a `CosmosDbClient` that uses the specified connection settings, database name, shared throughput, and container configuration.
+
 The `ICosmosDbClient` will ensure that:
-1. a connection is established with the specified CosmosDb `databseId` using the given `endPoint` and `authKey`
+
+1. a connection is established with the specified CosmosDb `databaseId` using the given `endPoint` and `authKey`
 2. the database is created using the specified shared throughput (NOTE: When specifying `null` you have to explicitly configure throughput for each container individually)
 3. the containers are created according to the specified configuration that takes into account the `containerId`, `partitionKeyPath`, `queryByDiscriminator` and `throughput`
+
 > **NOTE:** if the database/containers already exists, they remain untouched. This configuration will only ensure creation if the resources don't already exist.
 
 The `ICosmosDbClient` is automatically added to the .NET Core `ServiceCollection` that allows you to inject it into your controllers/services.
@@ -124,7 +143,7 @@ public class Vehicle : BaseEntity
 }
 ```
 
-Currently you need to specify your own ID and Discriminator values. *This will change in a future update.* 
+Currently you need to specify your own ID and Discriminator values. *This will change in a future update.*
 
 ## Accessing the CosmosDb Containers
 
@@ -146,7 +165,7 @@ All the CRUD methods for the CosmosDb Containers are strongly typed and return a
 
 > NOTE: Anonymous types are not supported.
 
-### Add
+### Add()
 
 ```csharp
 CosmosDbResponse<Vehicle> addResponse = await container.Add(
@@ -167,7 +186,7 @@ CosmosDbResponse<Vehicle> addResponse = await container.Add(
 	});
 ```
 
-### Get
+### Get()
 
 Getting an item from a container can be done with or without specifying the primary key value.
 
@@ -193,12 +212,12 @@ See the [Cosmos Db Cheatsheets](https://docs.microsoft.com/en-us/azure/cosmos-db
 
 ### LINQ Query
 
-You can build up LINQ queries (just like EFCore) instead of writing CoreSQL. 
+You can build up LINQ queries (just like EFCore) instead of writing CoreSQL.
 
 Use the `GetByLinq()` method to obtain an `IQueryable<T>` from the container to start building up your query. 
 
 Once you have your LINQ query prepared, call the `Resolve<T>()` method to obtain your results.
- 
+
 ```csharp
 IQueryable<Vehicle> query = container.GetByLinq<Vehicle>("Camaro")
 	.Where(v => v.Color == "Black" && v.PurchasePrice > 50000)
@@ -211,16 +230,15 @@ CosmosDbResponse<IEnumerable<Vehicle>> cars = await container.Resolve(query);
 See [Supported LINQ operators](https://docs.microsoft.com/en-us/azure/cosmos-db/sql-query-linq-to-sql#SupportedLinqOperators) for a full list of supported LINQ operators.
 
 > NOTE: Some Linq operators may not be supported by Cosmos Db. Although more operators are constantly being added by the Cosmos Db team.
+> NOTE: `Resolve<T>()` is required because `ToList()` and `ToArray()` are currently returning `null` .
 
-> NOTE: `Resolve<T>()` is required because `ToList()` and `ToArray()` are currently returning `null` . 
-
-### Update
+### Update()
 
 ```csharp
 TODO: add .Update() example
 ```
 
-###  Delete
+###  Delete()
 
 Deleting an entity using `.Delete()` requires both the `PartitionKey` and the entity `Id` values to be specified.
 
@@ -238,6 +256,7 @@ CosmosDbResponse<Vehicle> deletedCamaro = await container.Delete<Vehicle>("Camar
 * [ ] Transactions
 * [ ] Container Migrations
 * [ ] Simple Relationships
+* [ ] Migrate to .NET 5
 
 ## Thank you
 

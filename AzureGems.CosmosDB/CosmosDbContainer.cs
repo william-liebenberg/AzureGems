@@ -1,16 +1,12 @@
-﻿using System;
+﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AzureGems.CosmosDB
 {
@@ -260,7 +256,25 @@ namespace AzureGems.CosmosDB
 
 		public IQueryable<T> GetByLinq<T>()
 		{
-			return GetByLinq<T>(null);
+			PartitionKey pk = PartitionKey.Null;
+
+			var options = new QueryRequestOptions
+			{
+				// EnableScanInQuery = true,
+				PartitionKey = pk
+			};
+
+			IQueryable<T> query = _container.GetItemLinqQueryable<T>(
+				allowSynchronousQueryExecution: true,
+				continuationToken: null,
+				requestOptions: options);
+
+			if (Definition.QueryByDiscriminator)
+			{
+				query = query.WithDiscriminator(Definition.EntityType.Name);
+			}
+
+			return query;
 		}
 
 		public IQueryable<T> GetByLinq<T>(string partitionKey)

@@ -8,23 +8,46 @@ namespace AzureGems.SpendOps.CosmosDB
 {
 	public static class CosmosDbBuilderExtensions
 	{
-		public static IServiceCollection UseDefaultChargeTracker(this IServiceCollection services)
+		public static IServiceCollection AddSpendOps(this IServiceCollection services)
 		{
-			return services.UseChargeTracker<CosmosDbChargedResponse, CosmosDbChargeTracker>();
+			services
+				.UseChargeTracker<CosmosDbChargedResponse, CosmosDbChargeTracker>()
+				.TryAddSingleton<ICosmosDbContainerFactory>(provider =>
+				{
+					var chargeTracker = provider.GetService<IChargeTracker<CosmosDbChargedResponse>>();
+					return new TrackedCosmosDbContainerFactory(chargeTracker);
+				});
+
+			return services;
 		}
 
-		public static IServiceCollection UseDefaultSpendTestTracker(this IServiceCollection services)
+		public static IServiceCollection AddSpendOps<TTrackerImplementation>(this IServiceCollection services)
+			where TTrackerImplementation : IChargeTracker<CosmosDbChargedResponse>
 		{
-			return services.UseChargeTracker<CosmosDbChargedResponse, CosmosDbSpendTestChargeTracker>();
+			services
+				.UseChargeTracker<CosmosDbChargedResponse, TTrackerImplementation>()
+				.TryAddSingleton<ICosmosDbContainerFactory>(provider =>
+				{
+					var chargeTracker = provider.GetService<IChargeTracker<CosmosDbChargedResponse>>();
+					return new TrackedCosmosDbContainerFactory(chargeTracker);
+				});
+
+			return services;
 		}
 
-		/// <summary>
-		/// Add your custom <see cref="IChargeTracker"/>
-		/// </summary>
-		/// <typeparam name="TChargeType">The charge type (e.g. <see cref="CosmosDbChargedResponse"/>)</typeparam>
-		/// <typeparam name="TTrackerImplementation"></typeparam>
-		/// <returns>The <see cref="CosmosDbClientBuilder"/></returns>
-		public static IServiceCollection UseChargeTracker<TChargeType, TTrackerImplementation>(this IServiceCollection services)
+		public static IServiceCollection TrackSpendTests(this IServiceCollection services)
+		{
+			return services.TrackSpendTests<CosmosDbChargedResponse, CosmosDbSpendTestChargeTracker>();
+		}
+
+		public static IServiceCollection TrackSpendTests<TChargeType, TTrackerImplementation>(this IServiceCollection services)
+			where TTrackerImplementation : ISpendTestChargeTracker<TChargeType>
+		{
+			services.UseSpendTestChargeTracker<TChargeType, TTrackerImplementation>();
+			return services;
+		}
+
+		private static IServiceCollection UseChargeTracker<TChargeType, TTrackerImplementation>(this IServiceCollection services)
 			where TTrackerImplementation : IChargeTracker<TChargeType>
 		{
 			Type chargeTrackerInterface = typeof(IChargeTracker<>).MakeGenericType(typeof(TChargeType));
@@ -33,13 +56,7 @@ namespace AzureGems.SpendOps.CosmosDB
 			return services;
 		}
 
-		/// <summary>
-		/// Add your custom <see cref="ISpendTestChargeTracker"/>
-		/// </summary>
-		/// <typeparam name="TChargeType">The charge type (e.g. <see cref="CosmosDbChargedResponse"/>)</typeparam>
-		/// <typeparam name="TTrackerImplementation"></typeparam>
-		/// <returns>The <see cref="CosmosDbClientBuilder"/></returns>
-		public static IServiceCollection UseSpendTestChargeTracker<TChargeType, TTrackerImplementation>(this IServiceCollection services)
+		private static IServiceCollection UseSpendTestChargeTracker<TChargeType, TTrackerImplementation>(this IServiceCollection services)
 			where TTrackerImplementation : ISpendTestChargeTracker<TChargeType>
 		{
 			Type chargeTrackerInterface = typeof(IChargeTracker<>).MakeGenericType(typeof(TChargeType));
@@ -47,27 +64,6 @@ namespace AzureGems.SpendOps.CosmosDB
 			Type spendTestChargeTrackerImplementation = typeof(TTrackerImplementation);
 			services.AddSingleton(chargeTrackerInterface, spendTestChargeTrackerImplementation);
 			services.AddSingleton(spendTestChargeTrackerInterface, spendTestChargeTrackerImplementation);
-
-			return services;
-		}
-
-		public static IServiceCollection AddSpendOps(this IServiceCollection services)
-		{
-			services.TryAddSingleton<ICosmosDbContainerFactory>(provider =>
-			{
-				var factory = new CosmosDbContainerFactory
-				{
-					Provider = (creatorType, containerDefinition, cosmosDbClient) =>
-					{
-						var chargeTracker = cosmosDbClient.ServiceProvider.GetService<IChargeTracker<CosmosDbChargedResponse>>();
-						ICosmosDbContainer container = cosmosDbClient.GetContainer(containerDefinition.ContainerId)
-							.ConfigureAwait(false).GetAwaiter().GetResult();
-						return new TrackedCosmosDbContainer(containerDefinition, container, chargeTracker, creatorType.Name);
-					}
-				};
-
-				return factory;
-			});
 
 			return services;
 		}

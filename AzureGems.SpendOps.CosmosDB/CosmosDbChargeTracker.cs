@@ -27,11 +27,11 @@ namespace AzureGems.SpendOps.CosmosDB
 
 		public virtual Task Track(CosmosDbChargedResponse charge)
 		{
-			_logger.LogWarning("BuildId: {BuildId} Container: {ContainerId} Feature: {Feature} Context: {Context} StatusCode: {Status}, Latency: {Latency}ms, Charge: {Charge}RUs",
+			_logger.LogWarning("BuildId: {BuildId} Container: {ContainerId} Feature: {Feature} Tag(s): {Tags} StatusCode: {Status}, Latency: {Latency}ms, Charge: {Charge}RUs",
 				BuildId,
 				charge.ContainerId,
 				charge.Feature,
-				charge.Context != null ? string.Join(", ", charge.Context) : null,
+				charge.Tags != null ? string.Join(", ", charge.Tags) : null,
 				charge.StatusCode,
 				charge.ExecutionTime.TotalMilliseconds.ToString("##.000"),
 				charge.RequestCharge);

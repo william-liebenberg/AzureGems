@@ -8,7 +8,7 @@ namespace AzureGems.SpendOps.CosmosDB
 	{
 		public string ContainerId { get; set; }
 		public string Feature { get; set; }
-		public IEnumerable<string> Context { get; set; }
+		public IEnumerable<string> Tags { get; set; }
 		public HttpStatusCode StatusCode { get; set; }
 		public TimeSpan ExecutionTime { get; set; }
 		public double RequestCharge { get; set; }

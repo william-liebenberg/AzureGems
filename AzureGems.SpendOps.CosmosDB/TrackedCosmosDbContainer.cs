@@ -13,18 +13,17 @@ namespace AzureGems.SpendOps.CosmosDB
 		string Feature { get; set; }
 	}
 
-	public interface IRequestContext
+	public interface ITaggable
 	{
-		ICollection<string> Context { get; }
+		ICollection<string> Tags { get; }
 	}
 
-	public class TrackedCosmosDbContainer : ICosmosDbContainer, IFeature, IRequestContext
+	public class TrackedCosmosDbContainer : ICosmosDbContainer, IFeature, ITaggable
 	{
 		public IChargeTracker<CosmosDbChargedResponse> ChargeTracker { get; }
-		public ICosmosDbClient Client => _innerContainer.Client;
-
+		
 		public string Feature { get; set;  }
-		public ICollection<string> Context { get; }
+		public ICollection<string> Tags { get; }
 
 		private ICosmosDbContainer _innerContainer { get; }
 		public IContainerDefinition Definition { get; }
@@ -40,7 +39,7 @@ namespace AzureGems.SpendOps.CosmosDB
 			_innerContainer = container;
 			ChargeTracker = chargeTracker;
 			Feature = feature;
-			Context = context;
+			Tags = context;
 			ChargeTracker = chargeTracker;
 		}
 
@@ -48,7 +47,7 @@ namespace AzureGems.SpendOps.CosmosDB
 		{
 			if (ChargeTracker != null)
 			{
-				await ChargeTracker?.Track(resp.ToChargedResponse(_innerContainer.Definition.ContainerId, Feature, Context));
+				await ChargeTracker?.Track(resp.ToChargedResponse(_innerContainer.Definition.ContainerId, Feature, Tags));
 			}
 		}
 

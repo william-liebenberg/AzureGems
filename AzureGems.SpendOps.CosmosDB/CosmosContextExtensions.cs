@@ -6,12 +6,12 @@ using System.Collections.Generic;
 
 namespace AzureGems.SpendOps.CosmosDB
 {
-	public static class DbContextExtensions
+	public static class CosmosContextExtensions
 	{
-		public static TDbContext ForFeature<TDbContext>(this TDbContext context, string feature) where TDbContext : DbContext
+		public static TCosmosContext ForFeature<TCosmosContext>(this TCosmosContext context, string feature) where TCosmosContext : CosmosContext
 		{
 			// find all the IRepositories, and if they have TrackedContainers, then set the feature
-			IEnumerable<PropertyInfo> contextRepositories = typeof(TDbContext).GetProperties()
+			IEnumerable<PropertyInfo> contextRepositories = typeof(TCosmosContext).GetProperties()
 				.Where(prop =>
 					prop.PropertyType.IsInterface &&
 					prop.PropertyType.IsGenericType &&

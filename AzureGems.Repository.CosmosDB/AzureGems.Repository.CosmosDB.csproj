@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+	  <TargetFramework>netstandard2.1</TargetFramework>
     <Company>AzureGems</Company>
     <Authors>William Liebenberg</Authors>
     <PackageProjectUrl>https://azuregems.io</PackageProjectUrl>
@@ -14,15 +14,14 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>William Liebenberg</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.2.1.0</AssemblyVersion>
-    <FileVersion>1.2.1.0</FileVersion>
-    <Version>1.2.1</Version>
-    <Platforms>AnyCPU;x86</Platforms>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AzureGems.CosmosDB" Version="1.2.1" />
-    <PackageReference Include="AzureGems.Repository.Abstractions" Version="1.2.1" />
+    <PackageReference Include="AzureGems.CosmosDB" Version="2.0.0" />
+    <PackageReference Include="AzureGems.Repository.Abstractions" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

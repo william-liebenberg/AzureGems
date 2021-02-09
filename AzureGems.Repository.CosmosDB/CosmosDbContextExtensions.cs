@@ -10,32 +10,30 @@ namespace AzureGems.Repository.CosmosDB
 {
 	public static class CosmosDbContextExtensions
 	{
-		public static void AddCosmosDbContext<TContext>(this IServiceCollection services) where TContext : DbContext, new()
+		public static void AddCosmosContext<TContext>(this IServiceCollection services) where TContext : CosmosContext, new()
 		{
 			services.AddTransient(typeof(TContext), provider =>
 			{
 				var cosmosDbClient = provider.GetRequiredService<ICosmosDbClient>();
-				var instance = new TContext();
-				Type instanceType = typeof(TContext);
+				var cosmosContext = new TContext();
+				Type cosmosContextType = typeof(TContext);
 
 				// concrete repository type to instantiate against the IRepository<> interface
 				Type repoType = typeof(CosmosDbContainerRepository<>);
 
-				IEnumerable<PropertyInfo> contextRepositories = instanceType.GetProperties()
+				IEnumerable<PropertyInfo> contextRepositories = cosmosContextType.GetProperties()
 					.Where(prop =>
 						prop.PropertyType.IsInterface &&
 						prop.PropertyType.IsGenericType &&
 						prop.PropertyType.GetGenericTypeDefinition() == typeof(IRepository<>));
 
-				var containerFactory = provider.GetRequiredService<ICosmosDbContainerFactory>();
-				
 				foreach (PropertyInfo prop in contextRepositories)
 				{
 					Type repositoryEntityGenericType = prop.PropertyType.GetGenericArguments()[0];
 					Type constructedRepoType = repoType.MakeGenericType(repositoryEntityGenericType);
 					ContainerDefinition containerDefinition = cosmosDbClient.GetContainerDefinitionForType(prop.PropertyType.GetGenericArguments()[0]);
 
-					ICosmosDbContainer container = containerFactory.Create(instanceType, containerDefinition, cosmosDbClient);
+					ICosmosDbContainer container = cosmosDbClient.CreateContainer(containerDefinition).ConfigureAwait(false).GetAwaiter().GetResult();
 
 					var entityTypeNameResolverInstance = new CosmosDbEntityTypeNameResolver();
 					var pkvResolver = new CosmosDbPartitionKeyResolver();
@@ -45,10 +43,10 @@ namespace AzureGems.Repository.CosmosDB
 					var idValueGeneratorInstance = Activator.CreateInstance(idValueGeneratorInstanceType);
 
 					object repoInstance = Activator.CreateInstance(constructedRepoType, args: new object[] { container, entityTypeNameResolverInstance, idValueGeneratorInstance, pkvResolver });
-					prop.SetValue(instance, repoInstance);
+					prop.SetValue(cosmosContext, repoInstance);
 				}
 
-				return instance;
+				return cosmosContext;
 			});
 		}
 	}

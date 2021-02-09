@@ -4,7 +4,11 @@ namespace AzureGems.CosmosDB
 {
 	public interface ICosmosDbContainerFactory
 	{
-		Func<Type, IContainerDefinition, ICosmosDbClient, ICosmosDbContainer> Provider { get; set; }
-		ICosmosDbContainer Create(Type creatorType, IContainerDefinition definition, ICosmosDbClient client);
+		/// <summary>
+		/// Create customised CosmosDbContainers
+		/// </summary>
+		/// <param name="container">The base-level container obtained directly from the CosmosDb Database</param>
+		/// <returns></returns>
+		ICosmosDbContainer Create(ICosmosDbContainer container);
 	}
 }

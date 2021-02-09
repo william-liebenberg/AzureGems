@@ -1,24 +1,30 @@
 ﻿using AzureGems.CosmosDB;
-using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
-using AzureGems.SpendOps.Abstractions;
 
 namespace AzureGems.SpendOps.CosmosDB
 {
 	public static class CosmosDbContainerExtensions
 	{
-		public static ICosmosDbContainer WithContext(this ICosmosDbContainer container, string context)
+		public static ICosmosDbContainer Tag(this ICosmosDbContainer container, string context)
 		{
-			if (container is TrackedCosmosDbContainer trackedCosmosDbContainer)
+			TrackedCosmosDbContainer trackedContainer = container as TrackedCosmosDbContainer;
+			if (trackedContainer != null)
 			{
-				trackedCosmosDbContainer.Context.Add(context);
-				return trackedCosmosDbContainer;
+				trackedContainer.Tags.Clear();
+				trackedContainer.Tags.Add(context);
+				return trackedContainer;
 			}
-			else
+			return container;
+		}
+
+		public static ICosmosDbContainer AddTag(this ICosmosDbContainer container, string context)
+		{
+			TrackedCosmosDbContainer trackedContainer = container as TrackedCosmosDbContainer;
+			if (trackedContainer != null)
 			{
-				var chargeTracker = container.Client.ServiceProvider.GetRequiredService<IChargeTracker<CosmosDbChargedResponse>>();
-				return new TrackedCosmosDbContainer(container.Definition, container, chargeTracker, "Global", new List<string> { context });
+				trackedContainer.Tags.Add(context);
+				return trackedContainer;
 			}
+			return container;
 		}
 	}
 }

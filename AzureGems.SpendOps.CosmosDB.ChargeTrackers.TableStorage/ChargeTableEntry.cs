@@ -14,7 +14,7 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 			BuildId = buildId;
 			ContainerId = charge.ContainerId;
 			Feature = charge.Feature;
-			Context = charge.Context != null ? string.Join(", ", charge.Context) : null;
+			Context = charge.Tags != null ? string.Join(", ", charge.Tags) : null;
 			StatusCode = charge.StatusCode.ToString();
 			Duration = charge.ExecutionTime.TotalMilliseconds;
 			Charge = charge.RequestCharge;

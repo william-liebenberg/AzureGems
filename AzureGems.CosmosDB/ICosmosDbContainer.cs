@@ -9,7 +9,6 @@ namespace AzureGems.CosmosDB
 	public interface ICosmosDbContainer
 	{
 		IContainerDefinition Definition { get; }
-		ICosmosDbClient Client { get; }
 				
 		Task<CosmosDbResponse<T>> Add<T>(string partitionKey, T entity);
 		Task<CosmosDbResponse<T>> Update<T>(string partitionKey, T entity);

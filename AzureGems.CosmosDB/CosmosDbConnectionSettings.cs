@@ -19,25 +19,4 @@ namespace AzureGems.CosmosDB
 		public string EndPoint { get; set; }
 		public string AuthKey { get; set; }
 	}
-
-	public class CosmosDbDatabaseConfig
-	{
-		public CosmosDbDatabaseConfig(IConfiguration config)
-		{
-			DatabaseId = config["cosmosDbConnection:databaseId"];
-			if (int.TryParse(config["cosmosDbConnection:sharedThroughput"], out int throughput))
-			{
-				SharedThroughput = throughput;
-			}
-		}
-
-		public CosmosDbDatabaseConfig(string databaseId, int? sharedThroughput)
-		{
-			DatabaseId = databaseId;
-			SharedThroughput = sharedThroughput;
-		}
-
-		public string DatabaseId { get; set; }
-		public int? SharedThroughput { get; set; } = 400;
-	}
 }

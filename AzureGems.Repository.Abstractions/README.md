@@ -26,7 +26,7 @@ In the code above, `q` is of type `IQueryable<Widget>` and `w` is of type `Widge
 Each repository is strongly typed and most of the CRUD methods will only return a single/enumerable of the same strong type.
 
 However when using the LINQ Expression with the `Query()` method we are able to return custom models (view models) using the LINQ `.Select()` operator.
- 
+
 For example: 
 
 ```csharp
@@ -36,10 +36,11 @@ IEnumerable<WidgetViewModel> spinners = await widgetsRepo.Query(q => q
 	.Select(s => new WidgetViewModel()
 	{
 		DisplayName = s.Name + " Spinner",
-		Price = s.SalePrice		
+		Price = s.SalePrice
 	})
 );
 ```
+
 > NOTE: Returning Anonymous types aren't supported!
 
 ## `BaseType`

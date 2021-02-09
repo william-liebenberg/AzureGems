@@ -9,13 +9,15 @@ namespace AzureGems.CosmosDB
 	{
 		public static IServiceCollection AddCosmosDb(this IServiceCollection services, Action<CosmosDbClientBuilder> configure = null)
 		{
-			services.TryAddSingleton<ICosmosDbContainerFactory, CosmosDbContainerFactory>();
-
 			services.AddTransient(provider =>
 			{
 				var config = provider.GetRequiredService<IConfiguration>();
-				CosmosDbClientBuilder builder = new CosmosDbClientBuilder(services)
+				var containerFactory = provider.GetService<ICosmosDbContainerFactory>();
+
+				CosmosDbClientBuilder builder = new CosmosDbClientBuilder()
 					.ReadConfiguration(config);
+
+				builder.WithContainerFactory(containerFactory);
 
 				configure?.Invoke(builder);
 

@@ -7,47 +7,57 @@ namespace AzureGems.CosmosDB
 {
 	public class CosmosDbClientBuilder
 	{
-		public IServiceCollection Services { get; }
-
 		private readonly List<ContainerDefinition> _containerDefinitions = new List<ContainerDefinition>();
 		private CosmosDbConnectionSettings _connectionSettings = null;
-		private CosmosDbDatabaseConfig _dbconfig = null;
+		private CosmosDbDatabaseSettings _dbconfig = new CosmosDbDatabaseSettings(null, null);
+		private ICosmosDbContainerFactory _containerFactory = null;
 
-		public CosmosDbClientBuilder(IServiceCollection services)
+		public CosmosDbClientBuilder()
 		{
-			Services = services;
 		}
 
 		public CosmosDbClientBuilder ReadConfiguration(IConfiguration config)
 		{
 			_connectionSettings = new CosmosDbConnectionSettings(config);
-			_dbconfig = new CosmosDbDatabaseConfig(config);
+			_dbconfig = new CosmosDbDatabaseSettings(config);
+			return this;
+		}
+
+
+		public CosmosDbClientBuilder WithDbConfig(CosmosDbDatabaseSettings config)
+		{
+			_dbconfig = config;
+			return this;
+		}
+
+		public CosmosDbClientBuilder WithContainerFactory(ICosmosDbContainerFactory containerFactory)
+		{
+			_containerFactory = containerFactory;
 			return this;
 		}
 
 		public CosmosDbClientBuilder UseDatabase(string databaseId)
 		{
-			_dbconfig = _dbconfig != null ?
-				_dbconfig = new CosmosDbDatabaseConfig(databaseId, _dbconfig.SharedThroughput)
-				:
-				_dbconfig = new CosmosDbDatabaseConfig(databaseId, null);
-
+			_dbconfig.DatabaseId = databaseId;
 			return this;
 		}
 
 		public CosmosDbClientBuilder WithSharedThroughput(int throughput)
 		{
-			_dbconfig = _dbconfig != null ?
-				new CosmosDbDatabaseConfig(_dbconfig.DatabaseId, throughput)
-				:
-				new CosmosDbDatabaseConfig(null, throughput);
-
+			_dbconfig.SharedThroughput = throughput;
 			return this;
 		}
 
-		public CosmosDbClientBuilder UseConnection(string endPoint, string authKey)
+		public CosmosDbClientBuilder Connect(string endPoint, string authKey)
 		{
 			_connectionSettings = new CosmosDbConnectionSettings(endPoint, authKey);
+			return this;
+		}
+
+
+		public CosmosDbClientBuilder Connect(CosmosDbConnectionSettings connSettings)
+		{
+			_connectionSettings = connSettings;
 			return this;
 		}
 
@@ -66,8 +76,7 @@ namespace AzureGems.CosmosDB
 
 		public CosmosDbClient Build()
 		{
-			ServiceProvider sp = Services.BuildServiceProvider();
-			return new CosmosDbClient(sp, _connectionSettings, _dbconfig, _containerDefinitions);
+			return new CosmosDbClient(_connectionSettings, _dbconfig, _containerFactory, _containerDefinitions);
 		}
 	}
 }
