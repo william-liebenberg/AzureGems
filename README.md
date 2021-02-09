@@ -31,7 +31,7 @@ For example the following code can be added to your .NET/ASP.NET Core `Startup.c
 services.AddCosmosDb(builder =>
 {
 	builder
-		.UseConnection(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
+		.Connect(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
 		.UseDatabase(databaseId: "MyDatabase")
 		.WithSharedThroughput(10000);
 		.WithContainerConfig(c =>
