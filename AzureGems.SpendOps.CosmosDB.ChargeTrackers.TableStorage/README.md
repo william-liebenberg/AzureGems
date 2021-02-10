@@ -16,5 +16,5 @@ services
                 ...
             });
     })
-    .AddCosmosContext<DemoDbContext>();
+    .AddCosmosContext<DemoCosmosContext>();
 ```

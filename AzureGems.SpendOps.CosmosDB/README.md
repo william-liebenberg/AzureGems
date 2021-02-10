@@ -14,7 +14,7 @@ services
                 ...
             });
     })
-    .AddCosmosContext<DemoDbContext>();
+    .AddCosmosContext<DemoCosmosContext>();
 ```
 
 TODO: Document TContext.ForFeature() extension (CosmosContextExtensions.cs) - tags all repos with the same feature - quickfire method

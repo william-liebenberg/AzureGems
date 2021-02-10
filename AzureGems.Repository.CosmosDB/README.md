@@ -12,7 +12,7 @@ Defining your `CosmosContext` is straight forward.
 2. Declare a public `IRepository<T>` property for each model type (aka Domain Entity) with both `get` and `set` accessors.
 
 ```csharp
-public class LittleNorthwindDbContext : CosmosContext
+public class LittleNorthwindCosmosContext : CosmosContext
 {
     public IRepository<Customer> Customers { get; set; }
     public IRepository<Order> Orders { get; set; }
@@ -41,7 +41,7 @@ services.AddCosmosDb(builder =>
 });
 
 // Add your CosmosContext
-services.AddCosmosContext<LittleNorthwindDbContext>();
+services.AddCosmosContext<LittleNorthwindCosmosContext>();
 ```
 
 Now your `CosmosContext` is ready to be injected and used by your controllers/services.
@@ -51,9 +51,9 @@ Now your `CosmosContext` is ready to be injected and used by your controllers/se
 ```csharp
 public class LittleNorthwindService
 {
-	private readonly LittleNorthwindDbContext _dbContext;
+	private readonly LittleNorthwindCosmosContext _dbContext;
 
-	public LittleNorthwindService(LittleNorthwindDbContext dbContext)
+	public LittleNorthwindService(LittleNorthwindCosmosContext dbContext)
 	{
 		_dbContext = dbContext;
 	}

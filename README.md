@@ -57,12 +57,12 @@ Sample implementation: [AzureGems.Repository.CosmosDB](https://github.com/willia
 
 Cosmos DB specific implementation of the generic [Repository Pattern](https://deviq.com/repository-pattern/). `CosmosDbContainerRepository.cs` implements the `IRepository<T>` interface.
 
-This library also aims to provide EFCore-like `DbContext`'s by simply declaring one or more `IRepository<T>` (`DbSet` in EFCore) inside a `CosmosDbContext` class.
+This library also aims to provide EFCore-like `DbContext`'s by simply declaring one or more `IRepository<T>` (`DbSet` in EFCore) inside a `CosmosContext` class.
 
 For example:
 
 ```csharp
-public class LittleNorthwindDbContext : DbContext
+public class LittleNorthwindCosmosContext : CosmosContext
 {
     public IRepository<Customer> Customers { get; set; }
     public IRepository<Order> Orders { get; set; }
@@ -70,9 +70,9 @@ public class LittleNorthwindDbContext : DbContext
 }
 ```
 
-The `CosmosDbContainer` implementation already contains the definition of each container (see [AzureGems.CosmosDB](#AzureGemsCosmosDB)) and can instantiate the `IRepository<T>` instances via reflection when the `DbContext` is resolved from the `ServiceCollection`.
+The `CosmosDbContainer` implementation already contains the definition of each container (see [AzureGems.CosmosDB](#AzureGemsCosmosDB)) and can instantiate the `IRepository<T>` instances via reflection when the `CosmosContext` is resolved from the `ServiceCollection`.
 
-The instance of your `DbContext` can now be used in your application's services or controllers by constructor injection.
+The instance of your `CosmosContext` can now be used in your application's services or controllers by constructor injection.
 
 ## AzureGems.SpendOps.Abstractions
 
