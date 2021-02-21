@@ -74,6 +74,12 @@ namespace AzureGems.Repository.CosmosDB
 			return response.Result;
 		}
 
+		public async Task<TDomainEntity> GetById(string partitionKey, string id)
+		{
+			CosmosDbResponse<TDomainEntity> response = await Container.Get<TDomainEntity>(partitionKey, id);
+			return response.Result;
+		}
+
 		public async Task<TDomainEntity> Add(TDomainEntity entity)
 		{
 			// TODO: Move the ID Value Generator and Discriminator Setter to the lower level container
@@ -88,10 +94,27 @@ namespace AzureGems.Repository.CosmosDB
 			return response.Result;
 		}
 
-		public async Task<TDomainEntity> Delete(TDomainEntity entity)
+		public async Task<bool> Delete(string id)
+		{
+			TDomainEntity entity = (await Get(q => q.Id == id)).SingleOrDefault();
+			if(entity == null)
+			{
+				return default;
+			}
+
+			return await Delete(entity);
+		}
+
+		public async Task<bool> Delete(string partitionKeyValue, string id)
+		{
+			CosmosDbResponse<TDomainEntity> deletedEntity = await Container.Delete<TDomainEntity>(partitionKeyValue, id);
+			return deletedEntity.IsSuccessful;
+		}
+
+		public async Task<bool> Delete(TDomainEntity entity)
 		{
 			CosmosDbResponse<TDomainEntity> deletedEntity = await Container.Delete<TDomainEntity>(ResolvePartitionKeyValue(entity), entity.Id);
-			return deletedEntity.Result;
+			return deletedEntity.IsSuccessful;
 		}
 
 		public async Task<TDomainEntity> Update(TDomainEntity entity)
