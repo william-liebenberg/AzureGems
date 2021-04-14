@@ -31,6 +31,6 @@ jobs:
         PACKAGE_NAME: AzureGemsNugetTest
                 
         # API key to authenticate with NuGet server
-        NUGET_KEY: ${{NUGET_KEY}}
+        NUGET_KEY: ${{ secrets.NUGET_KEY }}
 
 
