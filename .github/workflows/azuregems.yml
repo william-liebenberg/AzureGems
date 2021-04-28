@@ -1,0 +1,36 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:        
+        dotnet-version: 3.1.401            
+    #- name: Publish
+    #  run: dotnet publish -c Release --output ./published
+    - name: Publish NuGet
+      # You may pin to the exact commit or the version.
+      # uses: brandedoutcast/publish-nuget@c12b8546b67672ee38ac87bea491ac94a587f7cc
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        # Filepath of the project to be packaged, relative to root of repository
+        PROJECT_FILE_PATH: ./AzureGems.CosmosDB/AzureGems.CosmosDB.csproj
+        
+        # NuGet package id, used for version detection & defaults to project name
+        PACKAGE_NAME: AzureGemsNugetTest
+                
+        # API key to authenticate with NuGet server
+        NUGET_KEY: ${{ secrets.NUGET_KEY }}
+
+
