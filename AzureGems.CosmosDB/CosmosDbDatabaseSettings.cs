@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
+using System;
 
 namespace AzureGems.CosmosDB
 {
@@ -11,15 +13,22 @@ namespace AzureGems.CosmosDB
 			{
 				SharedThroughput = throughput;
 			}
+
+			if(Enum.TryParse<ConnectionMode>(config["cosmosDbConnection:mode"], out ConnectionMode mode))
+			{
+				ConnectionMode = mode;
+			}
 		}
 
-		public CosmosDbDatabaseSettings(string databaseId, int? sharedThroughput)
+		public CosmosDbDatabaseSettings(string databaseId, int? sharedThroughput, ConnectionMode mode)
 		{
 			DatabaseId = databaseId;
 			SharedThroughput = sharedThroughput;
+			ConnectionMode = mode;
 		}
 
 		public string DatabaseId { get; set; }
 		public int? SharedThroughput { get; set; } = 400;
+		public ConnectionMode ConnectionMode { get; set; } = ConnectionMode.Gateway;
 	}
 }

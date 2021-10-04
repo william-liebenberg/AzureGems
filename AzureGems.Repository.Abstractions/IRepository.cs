@@ -18,5 +18,6 @@ namespace AzureGems.Repository.Abstractions
 		Task<bool> Delete(string partitionKey, string id);
 		Task<bool> Delete(TEntity entity);
 		Task<IEnumerable<TResult>> Query<TResult>(Expression<Func<IQueryable<TEntity>, IQueryable<TResult>>> queryExpression);
+		Task<int> Count<TResult>(Expression<Func<IQueryable<TEntity>, IQueryable<TResult>>> queryExpression);
 	}
 }

@@ -51,6 +51,14 @@ namespace AzureGems.Repository.CosmosDB
 			return await Resolve(q);
 		}
 
+		public async Task<int> Count<TResult>(Expression<Func<IQueryable<TDomainEntity>, IQueryable<TResult>>> queryExpression)
+		{
+			IQueryable<TDomainEntity> query = Container.GetByLinq<TDomainEntity>();
+			IQueryable<TResult> q = queryExpression.Compile().Invoke(query);
+			CosmosDbResponse<int> response = await Container.ResolveCount(q);
+			return response.Result;
+		}
+
 		public async Task<IEnumerable<TDomainEntity>> GetAll()
 		{
 			CosmosDbResponse<IEnumerable<TDomainEntity>> response = await Container.GetAll<TDomainEntity>();

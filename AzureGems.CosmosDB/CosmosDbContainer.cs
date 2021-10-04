@@ -1,8 +1,11 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -100,9 +103,15 @@ namespace AzureGems.CosmosDB
 			}
 		}
 
+		/// <summary>
+		/// Get entity by Id. For this direct fetch, the partitionKeyPath must also be /id
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		public async Task<CosmosDbResponse<T>> Get<T>(string id)
 		{
-			return await Get<T>(null, id);
+			return await Get<T>(id, id);
 		}
 
 		public async Task<CosmosDbResponse<T>> Get<T>(string partitionKey, string id)
@@ -127,6 +136,11 @@ namespace AzureGems.CosmosDB
 			{
 				watch.Stop();
 				return cex.ToCosmosDbResponse<T>(watch.Elapsed);
+			}
+			catch(ArgumentNullException anx)
+			{
+				watch.Stop();
+				return anx.ToCosmosDbResponse<T>(watch.Elapsed);
 			}
 		}
 
@@ -198,15 +212,25 @@ namespace AzureGems.CosmosDB
 
 		public async Task<CosmosDbResponse<IEnumerable<T>>> GetByQuery<T>(string partitionKey, string query, IReadOnlyDictionary<string, object> parameters)
 		{
-			var queryDef = new QueryDefinition(query);
-			
-			if (parameters != null)
+			QueryDefinition queryDef = null;
+
+			try
 			{
-				foreach (KeyValuePair<string, object> kvp in parameters)
+				queryDef = new QueryDefinition(query);
+
+				if (parameters != null)
 				{
-					queryDef.WithParameter(kvp.Key, kvp.Value);
+					foreach (KeyValuePair<string, object> kvp in parameters)
+					{
+						queryDef.WithParameter(kvp.Key, kvp.Value);
+					}
 				}
 			}
+			catch (ArgumentNullException anx)
+			{
+				return anx.ToCosmosDbQueryResponse<T>();
+			} 
+			
 
 			var options = new QueryRequestOptions();
 
@@ -302,19 +326,64 @@ namespace AzureGems.CosmosDB
 
 			return query;
 		}
-		
+
+		public async Task<CosmosDbResponse<int>> ResolveCount<T>(IQueryable<T> query)
+		{
+			var response = new CosmosDbResponse<int>();
+
+			Stopwatch watch = Stopwatch.StartNew();
+			try
+			{
+				QueryDefinition queryDef = query.ToQueryDefinition();
+				QueryDefinition countQueryDefinition = new QueryDefinition(ConvertToCountQuery(queryDef.QueryText));
+				FeedIterator feedIterator = _container.GetItemQueryStreamIterator(countQueryDefinition);
+				while (feedIterator.HasMoreResults)
+				{
+					ResponseMessage rm = await feedIterator.ReadNextAsync();
+
+					string raw = await new StreamReader(rm.Content).ReadToEndAsync();
+					JObject jObject = JObject.Parse(raw);
+					int count = jObject["Documents"][0]["$1"].Value<int>();
+					response.Result = count;
+
+					response.StatusCode = rm.StatusCode;
+					response.RequestCharge = rm.Headers.RequestCharge;
+					response.ActivityId = rm.Headers.ActivityId;
+					response.ETag = rm.Headers.ETag;
+					response.Diagnostics = rm.Diagnostics.ToString();
+				}
+
+				watch.Stop();
+				response.StatusCode = HttpStatusCode.OK;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				response.Error = cex;
+				response.ActivityId = cex.ActivityId;
+				response.StatusCode = cex.StatusCode;
+				response.RequestCharge += cex.RequestCharge;
+				response.Diagnostics = cex.Diagnostics.ToString();
+			}
+			finally
+			{
+				response.ExecutionTime = watch.Elapsed;
+			}
+
+			return response;
+		}
+
 		/// <summary>
 		/// use old fashioned string matching to rip out the select caluse and replace with a select count
 		/// </summary>
 		/// <param name="text"></param>
 		/// <returns></returns>
 		/// <exception cref="NotImplementedException"></exception>
-		private static string ConvertToCountQuery(string text)
+		private string ConvertToCountQuery(string text)
 		{
-			int fromPosition = text.IndexOf("FROM", StringComparison.InvariantCulture);
+			var fromPosition = text.IndexOf("FROM", StringComparison.InvariantCulture);
 			return "SELECT count(1) " + text.Substring(fromPosition);
 		}
-
 
 		public async Task<CosmosDbResponse<IEnumerable<T>>> Resolve<T>(IQueryable<T> query)
 		{
@@ -358,5 +427,51 @@ namespace AzureGems.CosmosDB
 
 			return response;
 		}
+
+		public async Task<CosmosDbResponse<IEnumerable<T>>> ResolveWithStreamIterator<T>(IQueryable<T> query)
+		{
+			var response = new CosmosDbResponse<IEnumerable<T>>();
+			var results = new List<T>();
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			try
+			{
+				QueryDefinition queryDef = query.ToQueryDefinition();
+
+				var streamIterator = _container.GetItemQueryStreamIterator(queryDef);
+				while (streamIterator.HasMoreResults)
+				{
+					var responseMessage = await streamIterator.ReadNextAsync();
+					var raw = await new StreamReader(responseMessage.Content).ReadToEndAsync();
+					var data = JsonConvert.DeserializeObject<List<T>>(JObject.Parse(raw)["Documents"].ToString(), new JsonSerializerSettings()
+					{
+						NullValueHandling = NullValueHandling.Ignore,
+						TypeNameHandling = TypeNameHandling.All,
+						MissingMemberHandling = MissingMemberHandling.Ignore
+					});
+					results.AddRange(data);
+				}
+				watch.Stop();
+				response.StatusCode = HttpStatusCode.OK;
+			}
+			catch (CosmosException cex)
+			{
+				watch.Stop();
+				response.Error = cex;
+				response.ActivityId = cex.ActivityId;
+				response.StatusCode = cex.StatusCode;
+				response.RequestCharge += cex.RequestCharge;
+				response.Diagnostics = cex.Diagnostics.ToString();
+			}
+			finally
+			{
+				response.ExecutionTime = watch.Elapsed;
+				response.Result = results;
+			}
+
+			return response;
+		}
+
 	}
 }

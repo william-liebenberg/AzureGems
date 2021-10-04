@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 	
@@ -9,7 +10,7 @@ namespace AzureGems.CosmosDB
 	{
 		private readonly List<ContainerDefinition> _containerDefinitions = new List<ContainerDefinition>();
 		private CosmosDbConnectionSettings _connectionSettings = null;
-		private CosmosDbDatabaseSettings _dbconfig = new CosmosDbDatabaseSettings(null, null);
+		private CosmosDbDatabaseSettings _dbconfig = new CosmosDbDatabaseSettings(null, null, ConnectionMode.Gateway);
 		private ICosmosDbContainerFactory _containerFactory = null;
 
 		public CosmosDbClientBuilder()
@@ -33,6 +34,18 @@ namespace AzureGems.CosmosDB
 		public CosmosDbClientBuilder WithContainerFactory(ICosmosDbContainerFactory containerFactory)
 		{
 			_containerFactory = containerFactory;
+			return this;
+		}
+
+		public CosmosDbClientBuilder UseDirectMode()
+		{
+			_dbconfig.ConnectionMode = ConnectionMode.Direct;
+			return this;
+		}
+
+		public CosmosDbClientBuilder UseGatewayMode()
+		{
+			_dbconfig.ConnectionMode = ConnectionMode.Gateway;
 			return this;
 		}
 

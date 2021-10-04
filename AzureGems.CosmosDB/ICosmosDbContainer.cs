@@ -29,5 +29,7 @@ namespace AzureGems.CosmosDB
 		IQueryable<T> GetByLinq<T>(string partitionKey);
 		
 		Task<CosmosDbResponse<IEnumerable<T>>> Resolve<T>(IQueryable<T> query);
+		Task<CosmosDbResponse<int>> ResolveCount<T>(IQueryable<T> query);
+		Task<CosmosDbResponse<IEnumerable<T>>> ResolveWithStreamIterator<T>(IQueryable<T> query);
 	}
 }

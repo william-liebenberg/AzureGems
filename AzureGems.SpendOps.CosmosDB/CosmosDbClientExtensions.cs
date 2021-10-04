@@ -16,17 +16,5 @@ namespace AzureGems.SpendOps.CosmosDB
 			}
 			return container;
 		}
-
-		public static async Task<ICosmosDbContainer> GetContainerForFeature<TEntity>(this ICosmosDbClient client, string featureToTrack)
-		{
-			ICosmosDbContainer container = await client.GetContainer<TEntity>();
-			TrackedCosmosDbContainer trackedContainer = container as TrackedCosmosDbContainer;
-			if (trackedContainer != null)
-			{
-				trackedContainer.Feature = featureToTrack;
-				return trackedContainer;
-			}
-			return container;
-		}
 	}
 }

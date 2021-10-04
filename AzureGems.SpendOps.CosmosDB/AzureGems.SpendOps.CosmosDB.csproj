@@ -32,7 +32,7 @@
     <PackageReference Include="AzureGems.Repository.Abstractions" Version="2.1.0" />
     <PackageReference Include="AzureGems.Repository.CosmosDB" Version="2.1.0" />
     <PackageReference Include="AzureGems.SpendOps.Abstractions" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.19" />
   </ItemGroup>
 
   <ItemGroup>

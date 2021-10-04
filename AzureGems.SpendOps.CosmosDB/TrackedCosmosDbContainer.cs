@@ -137,5 +137,19 @@ namespace AzureGems.SpendOps.CosmosDB
 			await TrackResponse(resp);
 			return resp;
 		}
+
+		public async Task<CosmosDbResponse<int>> ResolveCount<T>(IQueryable<T> query)
+		{
+			var resp = await _innerContainer.ResolveCount(query);
+			await TrackResponse(resp);
+			return resp;
+		}
+
+		public async Task<CosmosDbResponse<IEnumerable<T>>> ResolveWithStreamIterator<T>(IQueryable<T> query)
+		{
+			CosmosDbResponse<IEnumerable<T>> resp = await _innerContainer.ResolveWithStreamIterator(query);
+			await TrackResponse(resp);
+			return resp;
+		}
 	}
 }
