@@ -16,14 +16,15 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>William Liebenberg</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <FileVersion>2.2.0.0</FileVersion>
-    <Version>2.2.0</Version>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+    <Version>3.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AzureGems.CosmosDB" Version="2.2.0" />
-    <PackageReference Include="AzureGems.Repository.Abstractions" Version="2.2.0" />
+    <PackageReference Include="AzureGems.CosmosDB" Version="3.0.0" />
+    <PackageReference Include="AzureGems.Repository.Abstractions" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.32.0" />
   </ItemGroup>
 
   <ItemGroup>

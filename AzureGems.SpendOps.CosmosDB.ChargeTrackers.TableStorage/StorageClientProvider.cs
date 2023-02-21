@@ -1,5 +1,6 @@
 ﻿using System;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
+using Azure.Storage.Blobs;
 
 namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 {
@@ -10,20 +11,19 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 			string StorageAccountConnectionString { get; }
 		}
 
-		private readonly Lazy<CloudTableClient> _lazyTableClient;
+		private readonly Lazy<TableServiceClient> _lazyTableClient;
 
 		public StorageClientProvider(ISettings settings)
 		{
-			CloudStorageAccount sa = CloudStorageAccount.Parse(settings.StorageAccountConnectionString);
-
-			_lazyTableClient = new Lazy<CloudTableClient>(() => CreateCloudTableClient(sa));
+            _lazyTableClient = new Lazy<TableServiceClient>(() => CreateTableServiceClient(settings.StorageAccountConnectionString));
 		}
 
-		private static CloudTableClient CreateCloudTableClient(CloudStorageAccount sa)
-		{
-			return sa.CreateCloudTableClient();
-		}
+        private TableServiceClient CreateTableServiceClient(string storageAccountConnectionString)
+        {
+            var tc = new TableServiceClient(storageAccountConnectionString);
+			return tc;
+        }
 
-		public CloudTableClient TableClient => _lazyTableClient.Value;
+        public TableServiceClient TableClient => _lazyTableClient.Value;
 	}
 }

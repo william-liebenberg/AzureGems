@@ -1,15 +1,17 @@
-﻿using Microsoft.Azure.Cosmos.Table;
+﻿using Azure;
+using Azure.Data.Tables;
+using System;
 
 namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 {
-	public class ChargeTableEntry : TableEntity
+	public class ChargeTableEntry : ITableEntity
 	{
 		public ChargeTableEntry()
 		{
 
 		}
 
-		public ChargeTableEntry(string partitionKey, string rowKey, string buildId, CosmosDbChargedResponse charge) : base(partitionKey, rowKey)
+		public ChargeTableEntry(string partitionKey, string rowKey, string buildId, CosmosDbChargedResponse charge)
 		{
 			BuildId = buildId;
 			ContainerId = charge.ContainerId;
@@ -18,6 +20,7 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 			StatusCode = charge.StatusCode.ToString();
 			Duration = charge.ExecutionTime.TotalMilliseconds;
 			Charge = charge.RequestCharge;
+			PartitionKey = partitionKey;
 		}
 
 		public string BuildId { get; set; }
@@ -27,5 +30,9 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 		public string StatusCode { get; set; }
 		public double Duration { get; set; }
 		public double Charge { get; set; }
-	}
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+    }
 }

@@ -23,8 +23,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AzureGems.SpendOps.CosmosDB" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
+    <PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
+    <PackageReference Include="AzureGems.SpendOps.CosmosDB" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -22,7 +22,7 @@ The CosmosDB connection settings can be specified via `appsettings.json` instead
     "endpoint": "<YOUR COSMOS DB ENDPOINT>",
     "authkey": "<YOUR COSMOSDB AUTHKEY>",
     "databaseId": "<YOUR COSMOSDB DATABASE ID/NAME>",
-    "sharedThroughput": 20000
+    "sharedThroughput": 5000
   }
 }
 ```
@@ -39,10 +39,10 @@ services.AddCosmosDb(builder =>
 	builder
 		.Connect(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
 		.UseDatabase(databaseId: "MyDatabase")
-		.WithSharedThroughput(10000)
+		.WithSharedThroughput(4000)
 		.WithContainerConfig(c =>
 		{
-			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 20000);
+			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 5000);
 			c.AddContainer<Receipt>(containerId: "Receipts", partitionKeyPath: "/id");
 			c.AddContainer<Accessory>(containerId: "Accessories", partitionKeyPath: "/category");
 		});
@@ -57,7 +57,7 @@ services.AddCosmosDb(builder =>
 	builder
 		.WithContainerConfig(c =>
 		{
-			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 20000);
+			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 5000);
 			c.AddContainer<Receipt>(containerId: "Receipts", partitionKeyPath: "/id");
 			c.AddContainer<Accessory>(containerId: "Accessories", partitionKeyPath: "/category");
 		});
@@ -256,7 +256,7 @@ CosmosDbResponse<Vehicle> deletedCamaro = await container.Delete<Vehicle>("Camar
 * [ ] Transactions
 * [ ] Container Migrations
 * [ ] Simple Relationships
-* [ ] Migrate to .NET 5
+* [x] Migrate to .NET 7
 
 ## Thank you
 

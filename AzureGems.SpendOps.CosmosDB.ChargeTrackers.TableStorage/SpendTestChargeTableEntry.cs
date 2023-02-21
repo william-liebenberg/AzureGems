@@ -1,8 +1,10 @@
-﻿using Microsoft.Azure.Cosmos.Table;
+﻿using Azure;
+using Azure.Data.Tables;
+using System;
 
 namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 {
-	public class SpendTestChargeTableEntry : TableEntity
+	public class SpendTestChargeTableEntry : ITableEntity
 	{
 		public SpendTestChargeTableEntry()
 		{
@@ -10,7 +12,6 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 		}
 
 		public SpendTestChargeTableEntry(string partitionKey, string rowKey, string buildId, string testClass, string testName, CosmosDbChargedResponse charge)
-			: base(partitionKey, rowKey)
 		{
 			BuildId = buildId;
 			TestClass = testClass;
@@ -21,6 +22,9 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 			StatusCode = charge.StatusCode.ToString();
 			Duration = charge.ExecutionTime.TotalMilliseconds;
 			Charge = charge.RequestCharge;
+
+			PartitionKey = partitionKey;
+			RowKey = rowKey;
 		}
 
 
@@ -35,5 +39,10 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 		public string StatusCode { get; set; }
 		public double Duration { get; set; }
 		public double Charge { get; set; }
-	}
+
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+    }
 }

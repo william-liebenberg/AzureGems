@@ -9,6 +9,8 @@ Check out my video on SSW TV about [**#SpendOps**](https://azuregems.io/spendops
 
 Summary of all the [AzureGems](https://azuregems.io) libraries. For more detailed information check out the libraries individually.
 
+- [AzureGems](#azuregems)
+  - [Summary](#summary)
   - [AzureGems.CosmosDB](#azuregemscosmosdb)
   - [AzureGems.Repository.Abstractions](#azuregemsrepositoryabstractions)
   - [AzureGems.Repository.CosmosDB](#azuregemsrepositorycosmosdb)
@@ -40,7 +42,7 @@ services.AddCosmosDb(builder =>
 	builder
 		.Connect(endPoint: "<YOUR COSMOS DB ENDPOINT>", authKey: "<YOUR COSMOSDB AUTHKEY>")
 		.UseDatabase(databaseId: "MyDatabase")
-		.WithSharedThroughput(10000)
+		.WithSharedThroughput(4000)
 		.WithContainerConfig(c =>
 		{
 			c.AddContainer<Vehicle>(containerId: "Cars", partitionKeyPath: "/brand", queryByDiscriminator: false, throughput: 20000);

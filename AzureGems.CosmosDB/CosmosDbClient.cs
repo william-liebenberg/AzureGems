@@ -113,7 +113,7 @@ namespace AzureGems.CosmosDB
 		{
 			var containerDefinition = new ContainerProperties(id: containerId, partitionKeyPath: partitionKeyPath);
 
-			try
+            try
 			{
 				ContainerResponse response = await db.CreateContainerIfNotExistsAsync(
 					containerProperties: containerDefinition,

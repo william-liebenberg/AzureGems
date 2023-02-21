@@ -1,9 +1,9 @@
-﻿using Microsoft.Azure.Cosmos.Table;
+﻿using Azure.Data.Tables;
 
 namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 {
 	public interface IStorageClientProvider
 	{
-		CloudTableClient TableClient { get; }
+        TableServiceClient TableClient { get; }
 	}
 }
