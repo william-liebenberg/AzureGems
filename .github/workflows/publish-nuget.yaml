@@ -35,7 +35,9 @@ jobs:
         fetch-depth: 0 # Get all history to allow automatic versioning using MinVer
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
-    - run: dotnet pack --configuration Release --output ${{ env.NugetDirectory }}
+    - run: |
+        dotnet build AzureGems.sln -c Release
+        dotnet pack AzureGems.sln -c Release --no-build -o ${{ env.NugetDirectory }}
     - uses: actions/upload-artifact@v3
       with:
         name: nuget
