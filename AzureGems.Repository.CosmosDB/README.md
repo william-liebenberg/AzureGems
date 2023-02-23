@@ -24,9 +24,9 @@ public class LittleNorthwindCosmosContext : CosmosContext
 
 3. Register your `CosmosContext` with the `ServiceCollection` which will take care of instantiating it and initializing all the repositories to be backed by the correct Cosmos DB containers.
 
-> In `Startup.cs` you should already have added Cosmos DB and specified your Container Configurations. See [Adding AzureGems.CosmosDb](https://github.com/william-liebenberg/AzureGems/tree/master/AzureGems.CosmosDB#adding-azuregemscosmosdb)
+In `Startup.cs` you should already have added Cosmos DB and specified your Container Configurations. See [Adding AzureGems.CosmosDb](https://github.com/william-liebenberg/AzureGems/tree/master/AzureGems.CosmosDB#adding-azuregemscosmosdb)
 
-4. Register your `CosmosContext` using the `AddCosmosContext()` extension method:
+Example of adding AzureGems.CosmosDb:
 
 ```csharp
 services.AddCosmosDb(builder =>
@@ -39,7 +39,13 @@ services.AddCosmosDb(builder =>
 			c.AddContainer<Accessory>(containerId: "Accessories", partitionKeyPath: "/category");
 		});
 });
+```
 
+4. Register your `CosmosContext` using the `AddCosmosContext()` extension method:
+
+
+
+```cs
 // Add your CosmosContext
 services.AddCosmosContext<LittleNorthwindCosmosContext>();
 ```
