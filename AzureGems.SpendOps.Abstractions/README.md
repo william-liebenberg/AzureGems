@@ -1,2 +1,3 @@
 # AzureGems SpendOps - Abstractions
-TODO: Add instructions
+
+Abstraction library used with the `AzureGems.SpendOps.CosmosDB` and others like `AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage`.

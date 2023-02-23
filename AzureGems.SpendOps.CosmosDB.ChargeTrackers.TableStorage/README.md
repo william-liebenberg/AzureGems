@@ -1,5 +1,4 @@
 # AzureGems SpendOps - TableStorage Charge Tracker
-TODO: Add instructions
 
 ## Persist SpendOps SpendTests data in Azure TableStorage
 

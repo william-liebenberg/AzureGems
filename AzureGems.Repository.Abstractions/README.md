@@ -6,7 +6,7 @@ This library provides a CRUD interface for a Generic Repository. The interface a
 
 The `IRepository` interface does not provide methods that return an `IQueryable` as it is generally considered to be an anti-pattern.
 
-Instead, the interface provides a `Query()` method so that you can write Expressions against a provided `IQuerable` parameter.
+Instead, the interface provides a `Query()` method so that you can write Expressions against a provided `IQueryable` parameter.
 
 For example:
 
@@ -43,10 +43,10 @@ IEnumerable<WidgetViewModel> spinners = await widgetsRepo.Query(q => q
 
 > NOTE: Returning Anonymous types aren't supported!
 
-## `BaseType`
+## Using `BaseEntity`
 
 This type is used as a generic constraint for the `IRepository<T>` interface. This means any model of type `T` must inherit from `BaseEntity`
 
 It provides the required `Id` field and the `Discriminator` field to be used with all models.
 
-TODO: Can `BaseType` be moved to the AzureGems.Repository.CosmosDb implementation?
+TODO: Can `BaseEntity` be moved to the AzureGems.Repository.CosmosDb implementation?

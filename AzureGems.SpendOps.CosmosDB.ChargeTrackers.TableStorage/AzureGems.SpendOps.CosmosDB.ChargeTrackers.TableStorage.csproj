@@ -20,6 +20,7 @@
     <FileVersion>3.0.1</FileVersion>
     <Version>3.0.1</Version>
     <Platforms>AnyCPU;x86</Platforms>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="readme.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
