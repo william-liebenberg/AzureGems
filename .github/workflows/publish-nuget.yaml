@@ -37,7 +37,7 @@ jobs:
       uses: actions/setup-dotnet@v3
     - run: |
         dotnet build AzureGems.sln -c Release
-        dotnet pack AzureGems.sln -c Release --no-build -o ${{ env.NugetDirectory }}
+        dotnet pack AzureGems.sln -c Release --no-build --property:PackageOutputPath=${{ env.NugetDirectory }}
     - uses: actions/upload-artifact@v3
       with:
         name: nuget
