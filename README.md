@@ -1,6 +1,6 @@
 # AzureGems
 
-> NOTE: As of v2.2.0, Azure Gems Libraries have been upgraded to .NET 6.0
+> NOTE: As of v3 Azure Gems Libraries have been upgraded to .NET 7.0
 
 Check out my video on SSW TV about [**#SpendOps**](https://azuregems.io/spendops-with-azure-cosmos-db/) and CosmosDB: 
 - https://tv.ssw.com/real-life-spendops-with-cosmos-db-william-liebenberg/ 
