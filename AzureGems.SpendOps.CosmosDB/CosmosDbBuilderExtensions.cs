@@ -43,8 +43,7 @@ namespace AzureGems.SpendOps.CosmosDB
 		public static IServiceCollection TrackSpendTests<TChargeType, TTrackerImplementation>(this IServiceCollection services)
 			where TTrackerImplementation : ISpendTestChargeTracker<TChargeType>
 		{
-			services.UseSpendTestChargeTracker<TChargeType, TTrackerImplementation>();
-			return services;
+			return services.UseSpendTestChargeTracker<TChargeType, TTrackerImplementation>();
 		}
 
 		private static IServiceCollection UseChargeTracker<TChargeType, TTrackerImplementation>(this IServiceCollection services)

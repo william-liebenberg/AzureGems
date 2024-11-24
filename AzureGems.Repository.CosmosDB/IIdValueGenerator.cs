@@ -2,7 +2,7 @@
 
 namespace AzureGems.Repository.CosmosDB
 {
-	public interface IIdValueGenerator<TEntity> where TEntity : BaseEntity
+	public interface IIdValueGenerator<in TEntity> where TEntity : BaseEntity
 	{
 		string Generate(TEntity e);
 	}

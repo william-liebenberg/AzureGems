@@ -6,25 +6,22 @@ namespace AzureGems.SpendOps.CosmosDB
 	{
 		public static ICosmosDbContainer Tag(this ICosmosDbContainer container, string context)
 		{
-			TrackedCosmosDbContainer trackedContainer = container as TrackedCosmosDbContainer;
-			if (trackedContainer != null)
+			if (container is not TrackedCosmosDbContainer trackedContainer)
 			{
-				trackedContainer.Tags.Clear();
-				trackedContainer.Tags.Add(context);
-				return trackedContainer;
+				return container;
 			}
-			return container;
+			
+			trackedContainer.Tags.Clear();
+			trackedContainer.Tags.Add(context);
+			
+			return trackedContainer;
 		}
 
 		public static ICosmosDbContainer AddTag(this ICosmosDbContainer container, string context)
 		{
-			TrackedCosmosDbContainer trackedContainer = container as TrackedCosmosDbContainer;
-			if (trackedContainer != null)
-			{
-				trackedContainer.Tags.Add(context);
-				return trackedContainer;
-			}
-			return container;
+			if (container is not TrackedCosmosDbContainer trackedContainer) return container;
+			trackedContainer.Tags.Add(context);
+			return trackedContainer;
 		}
 	}
 }

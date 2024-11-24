@@ -23,8 +23,7 @@ namespace AzureGems.Repository.CosmosDB
 
 				IEnumerable<PropertyInfo> contextRepositories = cosmosContextType.GetProperties()
 					.Where(prop =>
-						prop.PropertyType.IsInterface &&
-						prop.PropertyType.IsGenericType &&
+						prop.PropertyType is { IsInterface: true, IsGenericType: true } &&
 						prop.PropertyType.GetGenericTypeDefinition() == typeof(IRepository<>));
 
 				foreach (PropertyInfo prop in contextRepositories)
@@ -46,7 +45,7 @@ namespace AzureGems.Repository.CosmosDB
 					var idValueGeneratorInstanceType = idValueGeneratorType.MakeGenericType(repositoryEntityGenericType);
 					var idValueGeneratorInstance = Activator.CreateInstance(idValueGeneratorInstanceType);
 
-					object repoInstance = Activator.CreateInstance(constructedRepoType, args: new object[] { container, entityTypeNameResolverInstance, idValueGeneratorInstance, pkvResolver });
+					object repoInstance = Activator.CreateInstance(constructedRepoType, args: [container, entityTypeNameResolverInstance, idValueGeneratorInstance, pkvResolver]);
 					prop.SetValue(cosmosContext, repoInstance);
 				}
 

@@ -7,7 +7,7 @@ namespace AzureGems.Repository.CosmosDB
 	{
 		public string Generate(TEntity e)
 		{
-			return e != null && string.IsNullOrWhiteSpace(e.Id) ? Guid.NewGuid().ToString() : e.Id;
+			return (e is null || string.IsNullOrWhiteSpace(e.Id ?? string.Empty)) ? Guid.NewGuid().ToString() : e.Id;
 		}
 	}
 }

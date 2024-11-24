@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <Company>AzureGems</Company>
@@ -10,37 +9,35 @@
     <PackageTags>SpendOps Abstractions</PackageTags>
     <RepositoryUrl>https://github.com/william-liebenberg/AzureGems</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
-    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseExpression>
+    </PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>Abstractions for SpendOps extensions.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>William Liebenberg</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>3.0.1.0</AssemblyVersion>
-    <FileVersion>3.0.1.0</FileVersion>
-    <Version>3.0.1</Version>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <Version>4.0.0</Version>
     <Platforms>AnyCPU;x86</Platforms>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="AzureGems.CosmosDB" Version="3.0.0" />
+    <PackageReference Include="AzureGems.CosmosDB" Version="4.0.0" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="readme.md">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath>
+      </PackagePath>
     </None>
     <None Include="LICENSE">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath>
+      </PackagePath>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\AzureGems.CosmosDB\AzureGems.CosmosDB.csproj" />
   </ItemGroup>
-  
-
 </Project>

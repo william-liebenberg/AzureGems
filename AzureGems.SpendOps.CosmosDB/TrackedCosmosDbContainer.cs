@@ -20,12 +20,12 @@ namespace AzureGems.SpendOps.CosmosDB
 
 	public class TrackedCosmosDbContainer : ICosmosDbContainer, IFeature, ITaggable
 	{
-		public IChargeTracker<CosmosDbChargedResponse> ChargeTracker { get; }
+		private IChargeTracker<CosmosDbChargedResponse> ChargeTracker { get; }
 		
 		public string Feature { get; set;  }
 		public ICollection<string> Tags { get; }
 
-		private ICosmosDbContainer _innerContainer { get; }
+		private readonly ICosmosDbContainer _innerContainer;
 		public IContainerDefinition Definition { get; }
 
 		public TrackedCosmosDbContainer(IContainerDefinition definition, ICosmosDbContainer container, IChargeTracker<CosmosDbChargedResponse> chargeTracker, string feature)
@@ -33,7 +33,7 @@ namespace AzureGems.SpendOps.CosmosDB
 		{
 		}
 
-		public TrackedCosmosDbContainer(IContainerDefinition definition, ICosmosDbContainer container, IChargeTracker<CosmosDbChargedResponse> chargeTracker, string feature, ICollection<string> context)
+		private TrackedCosmosDbContainer(IContainerDefinition definition, ICosmosDbContainer container, IChargeTracker<CosmosDbChargedResponse> chargeTracker, string feature, ICollection<string> context)
 		{
 			Definition = definition;
 			_innerContainer = container;
@@ -47,7 +47,11 @@ namespace AzureGems.SpendOps.CosmosDB
 		{
 			if (ChargeTracker != null)
 			{
-				await ChargeTracker?.Track(resp.ToChargedResponse(_innerContainer.Definition.ContainerId, Feature, Tags));
+				CosmosDbChargedResponse chargeResp = resp.ToChargedResponse(_innerContainer.Definition.ContainerId, Feature, Tags);
+				if (ChargeTracker is not null)
+				{
+					await ChargeTracker.Track(chargeResp);	
+				}
 			}
 		}
 

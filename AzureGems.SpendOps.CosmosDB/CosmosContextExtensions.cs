@@ -13,27 +13,33 @@ namespace AzureGems.SpendOps.CosmosDB
 			// find all the IRepositories, and if they have TrackedContainers, then set the feature
 			IEnumerable<PropertyInfo> contextRepositories = typeof(TCosmosContext).GetProperties()
 				.Where(prop =>
-					prop.PropertyType.IsInterface &&
-					prop.PropertyType.IsGenericType &&
+					prop.PropertyType is { IsInterface: true, IsGenericType: true } &&
 					prop.PropertyType.GetGenericTypeDefinition() == typeof(IRepository<>));
 
-			foreach (var contextRepoProp in contextRepositories)
+			foreach (PropertyInfo contextRepoProp in contextRepositories)
 			{
 				object repoValue = contextRepoProp.GetValue(context);
-				PropertyInfo containerProp = repoValue.GetType()
-					.GetProperties()
-					.Where(r =>
-						r.Name == "Container" &&
-						r.PropertyType.IsInterface &&
-						(r.PropertyType == typeof(ICosmosDbContainer) || r.PropertyType.IsSubclassOf(typeof(ICosmosDbContainer))))
-					.FirstOrDefault();
 
-				if (containerProp != null)
+				if (repoValue is null)
 				{
-					if (containerProp.GetValue(repoValue) is TrackedCosmosDbContainer trackedContainerValue)
-					{
-						trackedContainerValue.Feature = feature;
-					}
+					continue;
+				}
+				
+				PropertyInfo containerProp = repoValue
+					.GetType()
+					.GetProperties()
+					.FirstOrDefault(r => r.Name == "Container" &&
+					                     r.PropertyType.IsInterface &&
+					                     (r.PropertyType == typeof(ICosmosDbContainer) || r.PropertyType.IsSubclassOf(typeof(ICosmosDbContainer))));
+
+				if (containerProp == null)
+				{
+					continue;
+				}
+				
+				if (containerProp.GetValue(repoValue) is TrackedCosmosDbContainer trackedContainerValue)
+				{
+					trackedContainerValue.Feature = feature;
 				}
 			}
 

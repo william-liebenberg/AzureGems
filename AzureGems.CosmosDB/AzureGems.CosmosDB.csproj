@@ -1,45 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
-		<Nullable>disable</Nullable>
-		<ImplicitUsings>disable</ImplicitUsings>
-		<Company>AzureGems</Company>
-		<Authors>William Liebenberg</Authors>
-		<PackageProjectUrl>https://azuregems.io</PackageProjectUrl>
-		<PackageTags>Azure CosmosDB</PackageTags>
-		<RepositoryUrl>https://github.com/william-liebenberg/AzureGems</RepositoryUrl>
-		<RepositoryType>Github</RepositoryType>
-		<PackageLicenseExpression></PackageLicenseExpression>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<Description>Easy to use Azure Cosmos DB helper library.</Description>
-		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<Copyright>William Liebenberg</Copyright>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<AssemblyVersion>3.0.1</AssemblyVersion>
-		<FileVersion>3.0.1.0</FileVersion>
-		<Version>3.0.1</Version>
-		<ApplicationIcon />
-		<StartupObject />
-		<PackageReadmeFile>readme.md</PackageReadmeFile>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.Azure.Cosmos" Version="3.32.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="readme.md">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-		<None Include="LICENSE">
-			<Pack>True</Pack>
-			<PackagePath></PackagePath>
-		</None>
-	</ItemGroup>
-
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Company>AzureGems</Company>
+    <Authors>William Liebenberg</Authors>
+    <PackageProjectUrl>https://azuregems.io</PackageProjectUrl>
+    <PackageTags>Azure CosmosDB</PackageTags>
+    <RepositoryUrl>https://github.com/william-liebenberg/AzureGems</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+    <PackageLicenseExpression>
+    </PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>Easy to use Azure Cosmos DB helper library.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>William Liebenberg</Copyright>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
+    <Version>4.0.0</Version>
+    <ApplicationIcon />
+    <StartupObject />
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.46.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="readme.md">
+      <Pack>True</Pack>
+      <PackagePath>
+      </PackagePath>
+    </None>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>
+      </PackagePath>
+    </None>
+  </ItemGroup>
 </Project>

@@ -437,9 +437,9 @@ namespace AzureGems.CosmosDB
 
 			try
 			{
-				QueryDefinition queryDef = query.ToQueryDefinition();
+				var queryDef = query.ToQueryDefinition();
 
-				var streamIterator = _container.GetItemQueryStreamIterator(queryDef);
+				FeedIterator streamIterator = _container.GetItemQueryStreamIterator(queryDef);
 				while (streamIterator.HasMoreResults)
 				{
 					var responseMessage = await streamIterator.ReadNextAsync();

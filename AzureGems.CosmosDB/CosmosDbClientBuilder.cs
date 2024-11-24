@@ -2,20 +2,15 @@
 using System.Collections.Generic;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 	
 namespace AzureGems.CosmosDB
 {
 	public class CosmosDbClientBuilder
 	{
-		private readonly List<ContainerDefinition> _containerDefinitions = new List<ContainerDefinition>();
-		private CosmosDbConnectionSettings _connectionSettings = null;
-		private CosmosDbDatabaseSettings _dbconfig = new CosmosDbDatabaseSettings(null, null, ConnectionMode.Gateway);
-		private ICosmosDbContainerFactory _containerFactory = null;
-
-		public CosmosDbClientBuilder()
-		{
-		}
+		private readonly List<ContainerDefinition> _containerDefinitions = [];
+		private CosmosDbConnectionSettings _connectionSettings;
+		private CosmosDbDatabaseSettings _dbconfig = new(null, null, ConnectionMode.Gateway);
+		private ICosmosDbContainerFactory _containerFactory;
 
 		public CosmosDbClientBuilder ReadConfiguration(IConfiguration config)
 		{
