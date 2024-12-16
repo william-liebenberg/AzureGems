@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -41,7 +42,7 @@ namespace AzureGems.Repository.CosmosDB
 		private async Task<IEnumerable<TResult>> Resolve<TResult>(IQueryable<TResult> query)
 		{
 			CosmosDbResponse<IEnumerable<TResult>> resolvedQuery = await Container.Resolve(query);
-			return resolvedQuery.Result;
+			return resolvedQuery.Result ?? [];
 		}
 
 		public async Task<IEnumerable<TResult>> Query<TResult>(Expression<Func<IQueryable<TDomainEntity>, IQueryable<TResult>>> queryExpression)
@@ -62,29 +63,38 @@ namespace AzureGems.Repository.CosmosDB
 		public async Task<IEnumerable<TDomainEntity>> GetAll()
 		{
 			CosmosDbResponse<IEnumerable<TDomainEntity>> response = await Container.GetAll<TDomainEntity>();
-			return response.Result;
+			return response.Result ?? [];
 		}
 
 		public async Task<IEnumerable<TDomainEntity>> Get(Expression<Func<TDomainEntity, bool>> predicate)
 		{
 			IQueryable<TDomainEntity> query = Container.GetByLinq<TDomainEntity>()
-				// add the predicate
 				.Where(predicate);
 
 			CosmosDbResponse<IEnumerable<TDomainEntity>> response = await Container.Resolve(query);
-			return response.Result;
+			return response.Result ?? [];
 		}
 
-		public async Task<TDomainEntity> GetById(string id)
+		public async Task<TDomainEntity?> GetById(string id)
 		{
 			// TODO: Passing id as pk is not the correct approach!
 			CosmosDbResponse<TDomainEntity> response = await Container.Get<TDomainEntity>(id, id);
+			if (response.Result is null)
+			{
+				Debug.WriteLine($"Could not find entity by id: [{id}]");
+				return default;
+			}
 			return response.Result;
 		}
 
-		public async Task<TDomainEntity> GetById(string partitionKey, string id)
+		public async Task<TDomainEntity?> GetById(string partitionKey, string id)
 		{
 			CosmosDbResponse<TDomainEntity> response = await Container.Get<TDomainEntity>(partitionKey, id);
+			if (response.Result is null)
+			{
+				Debug.WriteLine($"Could not find entity by pk/id: [{partitionKey}/{id}]");
+				return default;
+			}
 			return response.Result;
 		}
 
@@ -98,16 +108,25 @@ namespace AzureGems.Repository.CosmosDB
 			// always set the entity type / Discriminator
 			entity.Discriminator = _entityType;
 
-			CosmosDbResponse<TDomainEntity> response = await Container.Add(ResolvePartitionKeyValue(entity), entity);
+			// resolve the PK value for this entity in this specific container
+			string partitionKey = ResolvePartitionKeyValue(entity);
+			
+			CosmosDbResponse<TDomainEntity> response = await Container.Add(partitionKey, entity);
+			if (response.Result is null)
+			{
+				throw new Exception($"Could not add entity with pk/id: [{partitionKey}/{entity.Id}]");
+			}
 			return response.Result;
 		}
 
 		public async Task<bool> Delete(string id)
 		{
-			TDomainEntity entity = (await Get(q => q.Id == id)).SingleOrDefault();
-			if(entity == null)
+			TDomainEntity? entity = (await Get(q => q.Id == id)).SingleOrDefault();
+			if (entity is null)
 			{
-				return default;
+				// TODO: Logging
+				Debug.WriteLine($"Could not find entity by id to delete: [{id}]");
+				return false;
 			}
 
 			return await Delete(entity);
@@ -116,12 +135,19 @@ namespace AzureGems.Repository.CosmosDB
 		public async Task<bool> Delete(string partitionKeyValue, string id)
 		{
 			CosmosDbResponse<TDomainEntity> deletedEntity = await Container.Delete<TDomainEntity>(partitionKeyValue, id);
+			// todo: logging
 			return deletedEntity.IsSuccessful;
 		}
 
 		public async Task<bool> Delete(TDomainEntity entity)
 		{
+			if(string.IsNullOrWhiteSpace(entity.Id))
+			{
+				throw new ArgumentException("Cannot delete entity without an ID");
+			}
+			
 			CosmosDbResponse<TDomainEntity> deletedEntity = await Container.Delete<TDomainEntity>(ResolvePartitionKeyValue(entity), entity.Id);
+			// todo: logging
 			return deletedEntity.IsSuccessful;
 		}
 
@@ -135,7 +161,14 @@ namespace AzureGems.Repository.CosmosDB
 			// always set the entity type / Discriminator
 			entity.Discriminator = _entityType;
 
-			CosmosDbResponse<TDomainEntity> updatedEntity = await Container.Update(ResolvePartitionKeyValue(entity), entity);
+			// resolve the PK value for this entity in this specific container
+			string partitionKey = ResolvePartitionKeyValue(entity);
+
+			CosmosDbResponse<TDomainEntity> updatedEntity = await Container.Update(partitionKey, entity);
+			if (updatedEntity.Result is null)
+			{
+				throw new Exception($"Could not update entity with pk/id: [{partitionKey}/{entity.Id}]");
+			}
 			return updatedEntity.Result;
 		}
 	}

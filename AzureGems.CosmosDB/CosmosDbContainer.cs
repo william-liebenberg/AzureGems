@@ -17,30 +17,28 @@ namespace AzureGems.CosmosDB
 	{
 		public IContainerDefinition Definition { get; }
 
-		private readonly Container _container;
+		private readonly Container _sdkContainer;
 
-		public ICosmosDbClient Client { get; }
-
-		public CosmosDbContainer(IContainerDefinition definition, ICosmosDbClient client, Container container)
+		public CosmosDbContainer(IContainerDefinition definition, Container sdkContainer)
 		{
 			Definition = definition;
-			Client = client;
-			_container = container;
+			_sdkContainer = sdkContainer;
 		}
 
+		// TODO: Globally Rename 'string partitionKey' to 'string partitionKeyValue'
 		public async Task<CosmosDbResponse<T>> Add<T>(string partitionKey, T entity)
 		{
-			PartitionKey pk = PartitionKey.Null;
+			PartitionKey? pk = PartitionKey.Null;
 			if (!string.IsNullOrWhiteSpace(partitionKey))
 			{
 				pk = new PartitionKey(partitionKey);
 			}
 
-			Stopwatch watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
 
 			try
 			{
-				ItemResponse<T> itemResponse = await _container.CreateItemAsync(entity, pk);
+				ItemResponse<T> itemResponse = await _sdkContainer.CreateItemAsync(entity, pk);
 				watch.Stop();
 
 				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
@@ -61,11 +59,11 @@ namespace AzureGems.CosmosDB
 				pk = new PartitionKey(partitionKey);
 			}
 
-			Stopwatch watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
 
 			try
 			{
-				ItemResponse<T> itemResponse = await _container.UpsertItemAsync(entity, pk);
+				ItemResponse<T> itemResponse = await _sdkContainer.UpsertItemAsync(entity, pk);
 				watch.Stop();
 
 				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
@@ -86,11 +84,11 @@ namespace AzureGems.CosmosDB
 				pk = new PartitionKey(partitionKey);
 			}
 
-			Stopwatch watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
 
 			try
 			{
-				ItemResponse<T> itemResponse = await _container.DeleteItemAsync<T>(id, pk);
+				ItemResponse<T> itemResponse = await _sdkContainer.DeleteItemAsync<T>(id, pk);
 				watch.Stop();
 
 				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
@@ -126,7 +124,7 @@ namespace AzureGems.CosmosDB
 
 			try
 			{
-				ItemResponse<T> itemResponse = await _container.ReadItemAsync<T>(id, pk);
+				ItemResponse<T> itemResponse = await _sdkContainer.ReadItemAsync<T>(id, pk);
 				watch.Stop();
 
 				CosmosDbResponse<T> response = itemResponse.ToCosmosDbResponse(watch.Elapsed);
@@ -165,7 +163,7 @@ namespace AzureGems.CosmosDB
 
 			try
 			{
-				FeedIterator<T> resultSet = _container.GetItemQueryIterator<T>();
+				FeedIterator<T> resultSet = _sdkContainer.GetItemQueryIterator<T>();
 				while (resultSet.HasMoreResults)
 				{
 					FeedResponse<T> feedResponse = await resultSet.ReadNextAsync();
@@ -210,15 +208,15 @@ namespace AzureGems.CosmosDB
 			return GetByQuery<T>(partitionKey, query, null);
 		}
 
-		public async Task<CosmosDbResponse<IEnumerable<T>>> GetByQuery<T>(string partitionKey, string query, IReadOnlyDictionary<string, object> parameters)
+		public async Task<CosmosDbResponse<IEnumerable<T>>> GetByQuery<T>(string? partitionKey, string query, IReadOnlyDictionary<string, object>? parameters)
 		{
-			QueryDefinition queryDef = null;
+			QueryDefinition queryDef;
 
 			try
 			{
 				queryDef = new QueryDefinition(query);
 
-				if (parameters != null)
+				if (parameters is not null)
 				{
 					foreach (KeyValuePair<string, object> kvp in parameters)
 					{
@@ -230,7 +228,6 @@ namespace AzureGems.CosmosDB
 			{
 				return anx.ToCosmosDbQueryResponse<T>();
 			} 
-			
 
 			var options = new QueryRequestOptions();
 
@@ -241,11 +238,13 @@ namespace AzureGems.CosmosDB
 
 			var response = new CosmosDbResponse<IEnumerable<T>>();
 			var results = new List<T>();
-			Stopwatch watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
 
 			try
 			{
-				FeedIterator<T> resultSetIterator = _container.GetItemQueryIterator<T>(queryDef, requestOptions: options);
+				// TODO: Add a maxResultsCount value to optionally limit the number of results to load
+				
+				FeedIterator<T> resultSetIterator = _sdkContainer.GetItemQueryIterator<T>(queryDef, requestOptions: options);
 				while (resultSetIterator.HasMoreResults)
 				{
 					FeedResponse<T> feedResponse = await resultSetIterator.ReadNextAsync();
@@ -288,7 +287,7 @@ namespace AzureGems.CosmosDB
 				PartitionKey = pk
 			};
 
-			IQueryable<T> query = _container.GetItemLinqQueryable<T>(
+			IQueryable<T> query = _sdkContainer.GetItemLinqQueryable<T>(
 				allowSynchronousQueryExecution: true,
 				continuationToken: null,
 				requestOptions: options);
@@ -314,7 +313,7 @@ namespace AzureGems.CosmosDB
 				PartitionKey = pk
 			};
 
-			IQueryable<T> query = _container.GetItemLinqQueryable<T>(
+			IQueryable<T> query = _sdkContainer.GetItemLinqQueryable<T>(
 				allowSynchronousQueryExecution: true,
 				continuationToken: null,
 				requestOptions: options);
@@ -331,20 +330,31 @@ namespace AzureGems.CosmosDB
 		{
 			var response = new CosmosDbResponse<int>();
 
-			Stopwatch watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
 			try
 			{
-				QueryDefinition queryDef = query.ToQueryDefinition();
-				QueryDefinition countQueryDefinition = new QueryDefinition(ConvertToCountQuery(queryDef.QueryText));
-				FeedIterator feedIterator = _container.GetItemQueryStreamIterator(countQueryDefinition);
+				var queryDef = query.ToQueryDefinition();
+				var countQueryDefinition = new QueryDefinition(ConvertToCountQuery(queryDef.QueryText));
+				FeedIterator feedIterator = _sdkContainer.GetItemQueryStreamIterator(countQueryDefinition);
 				while (feedIterator.HasMoreResults)
 				{
 					ResponseMessage rm = await feedIterator.ReadNextAsync();
 
 					string raw = await new StreamReader(rm.Content).ReadToEndAsync();
+					
 					JObject jObject = JObject.Parse(raw);
-					int count = jObject["Documents"][0]["$1"].Value<int>();
-					response.Result = count;
+					JToken? docs = jObject["Documents"];
+					JToken? firstDoc = docs?[0];
+					JToken? firstProperty = firstDoc?["$1"];
+					if (firstProperty != null)
+					{
+						var count = firstProperty.Value<int>();
+						response.Result = count;
+					}
+					else
+					{
+						response.Result = 0;
+					}
 
 					response.StatusCode = rm.StatusCode;
 					response.RequestCharge = rm.Headers.RequestCharge;
@@ -390,11 +400,11 @@ namespace AzureGems.CosmosDB
 			var response = new CosmosDbResponse<IEnumerable<T>>();
 			var results = new List<T>();
 
-			Stopwatch watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
             try
 			{
-				QueryDefinition queryDef = query.ToQueryDefinition();
-				FeedIterator<T> feedIterator = _container.GetItemQueryIterator<T>(queryDef);
+				var queryDef = query.ToQueryDefinition();
+				FeedIterator<T> feedIterator = _sdkContainer.GetItemQueryIterator<T>(queryDef);
 				
 				while (feedIterator.HasMoreResults)
 				{
@@ -439,11 +449,12 @@ namespace AzureGems.CosmosDB
 			{
 				var queryDef = query.ToQueryDefinition();
 
-				FeedIterator streamIterator = _container.GetItemQueryStreamIterator(queryDef);
+				FeedIterator streamIterator = _sdkContainer.GetItemQueryStreamIterator(queryDef);
 				while (streamIterator.HasMoreResults)
 				{
-					var responseMessage = await streamIterator.ReadNextAsync();
-					var raw = await new StreamReader(responseMessage.Content).ReadToEndAsync();
+					ResponseMessage? responseMessage = await streamIterator.ReadNextAsync();
+					string raw = await new StreamReader(responseMessage.Content).ReadToEndAsync();
+					// TODO: Add defensive code to handle nulls
 					var data = JsonConvert.DeserializeObject<List<T>>(JObject.Parse(raw)["Documents"].ToString(), new JsonSerializerSettings()
 					{
 						NullValueHandling = NullValueHandling.Ignore,

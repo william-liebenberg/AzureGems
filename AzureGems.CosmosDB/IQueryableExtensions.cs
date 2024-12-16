@@ -12,8 +12,8 @@ namespace AzureGems.CosmosDB
 		public static IQueryable<T> WithDiscriminator<T>(this IQueryable<T> source, string discriminator)
 		{
 			Type type = typeof(T);
-			PropertyInfo discriminatorProperty = type.GetProperty(DiscriminatorPropertyName);
-			if(discriminatorProperty == null)
+			PropertyInfo? discriminatorProperty = type.GetProperty(DiscriminatorPropertyName);
+			if(discriminatorProperty is null)
 			{
 				return source;
 			}

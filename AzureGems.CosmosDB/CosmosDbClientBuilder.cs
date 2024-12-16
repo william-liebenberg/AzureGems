@@ -8,9 +8,9 @@ namespace AzureGems.CosmosDB
 	public class CosmosDbClientBuilder
 	{
 		private readonly List<ContainerDefinition> _containerDefinitions = [];
-		private CosmosDbConnectionSettings _connectionSettings;
-		private CosmosDbDatabaseSettings _dbconfig = new(null, null, ConnectionMode.Gateway);
-		private ICosmosDbContainerFactory _containerFactory;
+		private CosmosDbConnectionSettings _connectionSettings = new(string.Empty, string.Empty);
+		private CosmosDbDatabaseSettings _dbconfig = new(string.Empty, null, ConnectionMode.Gateway);
+		private ICosmosDbContainerFactory? _containerFactory;
 
 		public CosmosDbClientBuilder ReadConfiguration(IConfiguration config)
 		{
@@ -18,15 +18,14 @@ namespace AzureGems.CosmosDB
 			_dbconfig = new CosmosDbDatabaseSettings(config);
 			return this;
 		}
-
-
+		
 		public CosmosDbClientBuilder WithDbConfig(CosmosDbDatabaseSettings config)
 		{
 			_dbconfig = config;
 			return this;
 		}
 
-		public CosmosDbClientBuilder WithContainerFactory(ICosmosDbContainerFactory containerFactory)
+		public CosmosDbClientBuilder WithContainerFactory(ICosmosDbContainerFactory? containerFactory)
 		{
 			_containerFactory = containerFactory;
 			return this;
@@ -56,12 +55,23 @@ namespace AzureGems.CosmosDB
 			return this;
 		}
 
+		public CosmosDbClientBuilder WithEndpoint(string endpoint)
+		{
+			_connectionSettings.EndPoint = endpoint;
+			return this;
+		}
+		
+		public CosmosDbClientBuilder WithAuthKey(string authKey)
+		{
+			_connectionSettings.AuthKey = authKey;
+			return this;
+		}
+
 		public CosmosDbClientBuilder Connect(string endPoint, string authKey)
 		{
 			_connectionSettings = new CosmosDbConnectionSettings(endPoint, authKey);
 			return this;
 		}
-
 
 		public CosmosDbClientBuilder Connect(CosmosDbConnectionSettings connSettings)
 		{

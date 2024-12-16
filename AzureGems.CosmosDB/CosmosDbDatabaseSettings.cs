@@ -8,13 +8,14 @@ namespace AzureGems.CosmosDB
 	{
 		public CosmosDbDatabaseSettings(IConfiguration config)
 		{
-			DatabaseId = config["cosmosDbConnection:databaseId"];
+			DatabaseId = config["cosmosDbConnection:databaseId"] ?? string.Empty;
+			
 			if (int.TryParse(config["cosmosDbConnection:sharedThroughput"], out int throughput))
 			{
 				SharedThroughput = throughput;
 			}
 
-			if(Enum.TryParse<ConnectionMode>(config["cosmosDbConnection:mode"], out ConnectionMode mode))
+			if(Enum.TryParse(config["cosmosDbConnection:mode"], out ConnectionMode mode))
 			{
 				ConnectionMode = mode;
 			}

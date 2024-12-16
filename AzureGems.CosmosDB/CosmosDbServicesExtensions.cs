@@ -6,7 +6,7 @@ namespace AzureGems.CosmosDB
 {
 	public static class CosmosDbServicesExtensions
 	{
-		public static IServiceCollection AddCosmosDb(this IServiceCollection services, Action<CosmosDbClientBuilder> configure = null)
+		public static IServiceCollection AddCosmosDb(this IServiceCollection services, Action<CosmosDbClientBuilder> configure)
 		{
 			services.AddTransient(provider =>
 			{

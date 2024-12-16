@@ -14,7 +14,7 @@ namespace AzureGems.SpendOps.CosmosDB
 				.UseChargeTracker<CosmosDbChargedResponse, CosmosDbChargeTracker>()
 				.TryAddSingleton<ICosmosDbContainerFactory>(provider =>
 				{
-					var chargeTracker = provider.GetService<IChargeTracker<CosmosDbChargedResponse>>();
+					var chargeTracker = provider.GetRequiredService<IChargeTracker<CosmosDbChargedResponse>>();
 					return new TrackedCosmosDbContainerFactory(chargeTracker);
 				});
 
@@ -28,7 +28,7 @@ namespace AzureGems.SpendOps.CosmosDB
 				.UseChargeTracker<CosmosDbChargedResponse, TTrackerImplementation>()
 				.TryAddSingleton<ICosmosDbContainerFactory>(provider =>
 				{
-					var chargeTracker = provider.GetService<IChargeTracker<CosmosDbChargedResponse>>();
+					var chargeTracker = provider.GetRequiredService<IChargeTracker<CosmosDbChargedResponse>>();
 					return new TrackedCosmosDbContainerFactory(chargeTracker);
 				});
 

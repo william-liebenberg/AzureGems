@@ -5,7 +5,7 @@ namespace AzureGems.Repository.Abstractions
 	public abstract class BaseEntity
 	{
 		[JsonProperty("id")]
-		public string Id { get; set; }
-		public string Discriminator { get; set; }
+		public string? Id { get; set; }
+		public string? Discriminator { get; set; }
 	}
 }

@@ -9,10 +9,10 @@ namespace AzureGems.CosmosDB
 	{
 		IEnumerable<ContainerDefinition> ContainerDefinitions { get; }
 		void AddContainerDefinition(ContainerDefinition containerDefinition);
-		ContainerDefinition GetContainerDefinition(string containerId);
-		ContainerDefinition GetContainerDefinitionForType(Type t);
+		ContainerDefinition? GetContainerDefinition(string containerId);
+		ContainerDefinition? GetContainerDefinitionForType(Type t);
 
-		Task<ICosmosDbContainer> GetContainer(string containerId);
+		Task<ICosmosDbContainer?> GetContainer(string containerId);
 
 		Task<ICosmosDbContainer> CreateContainer(ContainerDefinition containerDefinition);
 

@@ -13,6 +13,8 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 			string RuChargeTableName { get; }
 		}
 
+		private readonly ISettings _settings;
+
 		private readonly string _buildId;
 
 		public string TestClass { get; set; }
@@ -23,7 +25,7 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 			ISettings settings)
 		{
 			_tableStorageClientProvider = tableStorageClientProvider;
-			_ruTable = new AsyncLazy<TableClient>(async () => await CreateRuTable(settings.RuChargeTableName));
+			_settings = settings;
 
 			// Get BuildId from Environment Vars
 			_buildId = Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER");
@@ -34,28 +36,33 @@ namespace AzureGems.SpendOps.CosmosDB.ChargeTrackers.TableStorage
 			}
 		}
 
-		private async Task<TableClient> CreateRuTable(string tableName)
+		private readonly IStorageClientProvider _tableStorageClientProvider;
+		private TableClient _ruTable;
+
+		private async Task<TableClient> GetRuTable()
 		{
-			var rucTable = _tableStorageClientProvider.TableClient.GetTableClient(tableName);
+			return _ruTable ??= await CreateRuTable();
+		}
+		
+		private async Task<TableClient> CreateRuTable()
+		{
+			TableClient rucTable = _tableStorageClientProvider.TableClient.GetTableClient(_settings.RuChargeTableName);
 			await rucTable.CreateIfNotExistsAsync();
 			return rucTable;
 		}
-
-		private readonly IStorageClientProvider _tableStorageClientProvider;
-		private readonly AsyncLazy<TableClient> _ruTable;
-
+		
 		public async Task Track(CosmosDbChargedResponse charge)
 		{
+			TableClient table = await GetRuTable();
+			
 			DateTimeOffset now = DateTimeOffset.Now;
 			string pk = (DateTimeOffset.MaxValue.Ticks - now.Ticks).ToString();
 			string rk = (DateTimeOffset.MaxValue.Ticks - now.Ticks) + "." + Guid.NewGuid();
 
-            TableClient t = await _ruTable.Value;
-
 			// write the new charge
 			var spendEntry = new SpendTestChargeTableEntry(pk, rk, _buildId, TestClass, TestName, charge);
 
-			await t.UpsertEntityAsync(spendEntry);
+			await table.UpsertEntityAsync(spendEntry);
 		}
 	}
 }

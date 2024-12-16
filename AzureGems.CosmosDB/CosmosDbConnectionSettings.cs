@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 
 namespace AzureGems.CosmosDB
 {
@@ -6,8 +7,8 @@ namespace AzureGems.CosmosDB
 	{
 		public CosmosDbConnectionSettings(IConfiguration config)
 		{
-			EndPoint = config["cosmosDbConnection:endpoint"];
-			AuthKey = config["cosmosDbConnection:authKey"];
+			EndPoint = config["cosmosDbConnection:endpoint"] ?? string.Empty;
+			AuthKey = config["cosmosDbConnection:authKey"] ?? string.Empty;
 		}
 		
 		public CosmosDbConnectionSettings(string endPoint, string authKey)

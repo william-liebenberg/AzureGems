@@ -3,6 +3,7 @@ using AzureGems.Repository.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -34,19 +35,38 @@ namespace AzureGems.Repository.CosmosDB
 					// TODO: how can we allow multiple repos of the same type but with different names and pk paths?
 					// We somehow have to search via ContainerDefs or... rework the whole config story...and have a Config() method on the CosmosContext that
 					// we use to configure each repository individually...
-					ContainerDefinition containerDefinition = cosmosDbClient.GetContainerDefinitionForType(prop.PropertyType.GetGenericArguments()[0]);
+					Type entityType = prop.PropertyType.GetGenericArguments()[0];
+					ContainerDefinition? containerDefinition = cosmosDbClient.GetContainerDefinitionForType(entityType);
 
+					if (containerDefinition is null)
+					{
+						throw new Exception($"Container Definition for type [{entityType.Name}] not found!");
+					}
+					
 					ICosmosDbContainer container = cosmosDbClient.CreateContainer(containerDefinition).ConfigureAwait(false).GetAwaiter().GetResult();
 
 					var entityTypeNameResolverInstance = new CosmosDbEntityTypeNameResolver();
 					var pkvResolver = new CosmosDbPartitionKeyResolver();
 
-					var idValueGeneratorType = typeof(CosmosDbIdValueGenerator<>);
-					var idValueGeneratorInstanceType = idValueGeneratorType.MakeGenericType(repositoryEntityGenericType);
-					var idValueGeneratorInstance = Activator.CreateInstance(idValueGeneratorInstanceType);
+					Type idValueGeneratorType = typeof(CosmosDbIdValueGenerator<>);
+					Type idValueGeneratorInstanceType = idValueGeneratorType.MakeGenericType(repositoryEntityGenericType);
+					object? idValueGeneratorInstance = Activator.CreateInstance(idValueGeneratorInstanceType);
 
-					object repoInstance = Activator.CreateInstance(constructedRepoType, args: [container, entityTypeNameResolverInstance, idValueGeneratorInstance, pkvResolver]);
-					prop.SetValue(cosmosContext, repoInstance);
+					try
+					{
+						object? repoInstance = Activator.CreateInstance(constructedRepoType, args: [container, entityTypeNameResolverInstance, idValueGeneratorInstance, pkvResolver]);
+						if (repoInstance is null)
+						{
+							throw new Exception($"Could not instantiate Container Repository for entity type: [{constructedRepoType.Name}]");
+						}
+						prop.SetValue(cosmosContext, repoInstance);
+					}
+					catch (Exception e)
+					{
+						Debug.WriteLine($"Could not instantiate Container Repository for entity type: [{constructedRepoType.Name}]");
+						Debug.WriteLine(e.Message);
+						throw;
+					}
 				}
 
 				return cosmosContext;

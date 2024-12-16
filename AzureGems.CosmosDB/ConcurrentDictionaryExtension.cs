@@ -8,9 +8,16 @@ namespace AzureGems.CosmosDB
 	{
 		public static async Task<TValue> GetOrAddAsync<TKey, TValue>(
 			this ConcurrentDictionary<TKey, TValue> dictionary,
-			TKey key, Func<TKey, Task<TValue>> valueFactory)
+			TKey key, Func<TKey, Task<TValue>> valueFactory) where TKey : notnull
 		{
-			return dictionary.TryGetValue(key, out TValue resultingValue) ? resultingValue : dictionary.GetOrAdd(key, await valueFactory(key));
+			if (dictionary.TryGetValue(key, out TValue? resultingValue))
+			{
+				return resultingValue;
+			}
+
+			TValue value = await valueFactory(key);
+			
+			return dictionary.GetOrAdd(key, value);
 		}
 	}
 }
