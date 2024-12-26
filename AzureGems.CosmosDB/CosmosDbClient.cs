@@ -30,56 +30,55 @@ namespace AzureGems.CosmosDB
 
 		public void AddContainerDefinition(ContainerDefinition containerDefinition)
 		{
-			// TODO: WHAT IS GOING ON HERE -- Refactor
-			
 			ContainerDefinition? existing = GetContainerDefinition(containerDefinition.ContainerId);
-			//ContainerDefinition existing = GetContainerDefinitionForType(containerDefinition.EntityType);
-			if (existing is null)
+			switch (existing)
 			{
-				_containerDefinitions.Add(containerDefinition);
-				return;
+				case null:
+				{
+					_containerDefinitions.Add(containerDefinition);
+					return;
+				}
+				default:
+				{
+					throw new ContainerDefinitionAlreadyExistsException(containerDefinition);
+				}
 			}
-
-			throw new NotImplementedException();
 		}
 
 		public async Task<ICosmosDbContainer> CreateContainer(ContainerDefinition containerDefinition)
 		{
+			// use GetOrAddAsync to ensure that the container is only created once - we are not using AddOrUpdate because we want to ensure that the container is only created once
 			return await _containerCache.GetOrAddAsync(containerDefinition.ContainerId, async id =>
 			{
-				////ContainerDefinition definition = GetContainerDefinitionForType(containerDefinition.EntityType);
-				
-				//ContainerDefinition definition = GetContainerDefinition(containerDefinition.ContainerId);
-				var definition = GetContainerDefinition(id);
+				ContainerDefinition? definition = GetContainerDefinition(id);
 				if (definition is null)
 				{
-					throw new Exception($"Container definition [{containerDefinition.ContainerId}] not found!");
+					throw new ContainerDefinitionNotFoundException(id);
 				}
-
-				// Container cosmosSdkContainer = await Internal_GetContainer(containerDefinition.ContainerId);
-				//Container cosmosSdkContainer = await Internal_EnsureContainerExists(await this.GetDatabase(), containerDefinition);
-				var cosmosSdkDatabase = await GetDatabase();
-				var cosmosSdkContainer = await Internal_EnsureContainerExists(cosmosSdkDatabase, definition);
-				//CosmosDbContainer container = new (definition, this, cosmosSdkContainer);
-				var container = new CosmosDbContainer(definition, cosmosSdkContainer);
-
-				// if a container factory is configured, use the container factory to allow for custom container implementations (such as tracking request unit charges),
-				// otherwise return the default container
 				
-				// TODO: replace factory name with something more appropriate - like postContainerCreateEvent
+				Database cosmosSdkDatabase = await GetDatabase();
+				Container cosmosSdkContainer = await Internal_EnsureContainerExists(cosmosSdkDatabase, definition);
+				var container = new CosmosDbContainer(definition, cosmosSdkContainer);
+				
+				// TODO: add preContainerCreateEvent
+				
+				// if a container factory is configured, use the container factory to allow for custom container implementations and/or configurations (such as tracking request unit charges),
+				// otherwise return the default container
 				return _containerFactory is null ? container : _containerFactory.Create(container);
+				
+				// TODO: add postContainerCreateEvent
 			});
 		}
 
 		public ContainerDefinition? GetContainerDefinition(string containerId)
 		{
-			var containerDef = _containerDefinitions.FirstOrDefault(def => def.ContainerId == containerId);
+			ContainerDefinition? containerDef = _containerDefinitions.SingleOrDefault(def => string.Equals(def.ContainerId, containerId, StringComparison.OrdinalIgnoreCase));
 			return containerDef;
 		}
 
 		public ContainerDefinition? GetContainerDefinitionForType(Type t)
 		{
-			var containerDefForT = _containerDefinitions.FirstOrDefault(def => def.EntityType == t);
+			ContainerDefinition? containerDefForT = _containerDefinitions.SingleOrDefault(def => def.EntityType == t);
 			return containerDefForT;
 		}
 
@@ -146,12 +145,7 @@ namespace AzureGems.CosmosDB
 
 		private static async Task<Container> Internal_EnsureContainerExists(Database db, ContainerDefinition containerDefinition)
 		{
-			return await Internal_EnsureContainerExists(db, containerDefinition.ContainerId, containerDefinition.PartitionKeyPath, containerDefinition.Throughput);
-		}
-
-		private static async Task<Container> Internal_EnsureContainerExists(Database db, string containerId, string partitionKeyPath, int? throughput)
-		{
-			var containerDefinition = new ContainerProperties(id: containerId, partitionKeyPath: partitionKeyPath);
+			var containerProperties = new ContainerProperties(id: containerDefinition.ContainerId, partitionKeyPath: containerDefinition.PartitionKeyPath);
 
 			// add some retry logic to endure the container is created successfully. each failed attempt should wait longer than the previous one
 			int[] retryIntervals = [1000, 2000, 5000, 10000, 20000];
@@ -162,8 +156,8 @@ namespace AzureGems.CosmosDB
 				{
 					// Create the container if it does not exist
 					response = await db.CreateContainerIfNotExistsAsync(
-						containerProperties: containerDefinition,
-						throughput: throughput);
+						containerProperties: containerProperties,
+						throughput: containerDefinition.Throughput);
 					
 					break;
 				}
@@ -185,23 +179,15 @@ namespace AzureGems.CosmosDB
 			}
 
 			if (response != null) return response.Container;
-			throw new Exception($"Failed to create container [{containerId}] after multiple attempts");
+			throw new Exception($"Failed to create container [{containerDefinition.ContainerId}] after multiple attempts");
 		}
-
-		private async Task<Container> Internal_GetContainer(string containerId)
-		{
-			Database database = await GetDatabase();
-			Container container = database.GetContainer(containerId);
-			return container;
-		}
-
+		
 		public async Task<ICosmosDbContainer?> GetContainer(string containerId)
 		{
-			// TODO: Avoid searching for container via ID, prefer type instead
-			var definition = GetContainerDefinition(containerId);
+			ContainerDefinition? definition = GetContainerDefinition(containerId);
 			if (definition is null)
 			{
-				throw new Exception($"Container definition [{containerId}] not found!");
+				throw new ContainerDefinitionNotFoundException(containerId);
 			}
 			
 			return await this.CreateContainer(definition);
@@ -209,33 +195,25 @@ namespace AzureGems.CosmosDB
 
 		public async Task<bool> DeleteContainer(ContainerDefinition containerDefinition)
 		{
-			Container sdkContainer = await Internal_GetContainer(containerDefinition.ContainerId);
+			Database database = await GetDatabase();
+			Container sdkContainer = database.GetContainer(containerDefinition.ContainerId);
 			ContainerResponse sdkResponse = await sdkContainer.DeleteContainerAsync();
 			CosmosDbResponse<ContainerProperties> deleteResponse = sdkResponse.ToCosmosDbResponse();
 			if(!deleteResponse.IsSuccessful)
 			{
 				// TODO: need logging
-				// TODO: throw exception?
 				return false;
 			}
 
-			if(_containerCache.TryRemove(containerDefinition.ContainerId, out ICosmosDbContainer? removedContainer))
+			if (!_containerCache.TryRemove(containerDefinition.ContainerId, out _))
 			{
-				if (removedContainer is not null)
-				{
-					Debug.WriteLine($"Removed non-null container: [{removedContainer.Definition.ContainerId}]");
-				}
-				else
-				{
-					Debug.WriteLine($"Removed non-null container: [{containerDefinition.ContainerId}]");
-				}
-
-				// container was removed from cache successfully
-				return true;
+				// container was not removed from cache... this should not happen
+				throw new ContainerDefinitionNotDeletedException(containerDefinition);
 			}
 
-			// container was not removed from cache...but do we really care?
-			// TODO: do we care if cache entry is not removed properly?
+			Debug.WriteLine($"Removed Container Definition: [{containerDefinition.ContainerId}]");
+
+			// container was removed from cache successfully
 			return true;
 		}
 

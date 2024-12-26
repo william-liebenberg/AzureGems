@@ -6,6 +6,11 @@ namespace AzureGems.CosmosDB
 	{
 		public ContainerDefinition(string containerId, string partitionKeyPath, Type entityType, bool queryByDiscriminator = true)
 		{
+			if (string.IsNullOrWhiteSpace(containerId))
+			{
+				throw new ArgumentException("Container ID cannot be null or whitespace.", nameof(containerId));
+			}
+
 			ContainerId = containerId;
 			PartitionKeyPath = partitionKeyPath;
 			EntityType = entityType;
@@ -21,6 +26,7 @@ namespace AzureGems.CosmosDB
 		public Type EntityType { get; }
 		public string ContainerId { get; }
 		public string PartitionKeyPath { get; }
+		// Throughput is optional. If not set, the container will use Shared throughput from the database.
 		public int? Throughput { get; }
 		public bool QueryByDiscriminator { get; }
 	}

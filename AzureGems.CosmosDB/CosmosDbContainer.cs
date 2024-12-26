@@ -454,14 +454,19 @@ namespace AzureGems.CosmosDB
 				{
 					ResponseMessage? responseMessage = await streamIterator.ReadNextAsync();
 					string raw = await new StreamReader(responseMessage.Content).ReadToEndAsync();
-					// TODO: Add defensive code to handle nulls
-					var data = JsonConvert.DeserializeObject<List<T>>(JObject.Parse(raw)["Documents"].ToString(), new JsonSerializerSettings()
+
+					JObject obj = JObject.Parse(raw);
+					JToken? docs = obj["Documents"];
+					var json = docs?.ToString();
+					if (string.IsNullOrWhiteSpace(json)) continue;
+					
+					var data = JsonConvert.DeserializeObject<List<T>>(json, new JsonSerializerSettings()
 					{
 						NullValueHandling = NullValueHandling.Ignore,
 						TypeNameHandling = TypeNameHandling.All,
 						MissingMemberHandling = MissingMemberHandling.Ignore
 					});
-					results.AddRange(data);
+					results.AddRange(data ?? []);
 				}
 				watch.Stop();
 				response.StatusCode = HttpStatusCode.OK;

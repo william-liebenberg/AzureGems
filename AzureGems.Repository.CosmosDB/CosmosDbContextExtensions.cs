@@ -32,9 +32,11 @@ namespace AzureGems.Repository.CosmosDB
 					Type repositoryEntityGenericType = prop.PropertyType.GetGenericArguments()[0];
 					Type constructedRepoType = repoType.MakeGenericType(repositoryEntityGenericType);
 
-					// TODO: how can we allow multiple repos of the same type but with different names and pk paths?
-					// We somehow have to search via ContainerDefs or... rework the whole config story...and have a Config() method on the CosmosContext that
-					// we use to configure each repository individually...
+					// Question: how can we allow multiple repos of the same type but with different names and pk paths?
+					// We somehow have to search via ContainerDefs or... rework the whole config story...and have a Config() method on the CosmosContext that we use to configure each repository individually...
+					// Answer: Having multiple repositories for the same type in a single DB Context will require some kind of keyed configuration.
+					// Answer 2: Use different CosmosContexts to separate the repositories
+					
 					Type entityType = prop.PropertyType.GetGenericArguments()[0];
 					ContainerDefinition? containerDefinition = cosmosDbClient.GetContainerDefinitionForType(entityType);
 
