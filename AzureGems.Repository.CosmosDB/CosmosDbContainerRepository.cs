@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AzureGems.CosmosDB;
 using AzureGems.Repository.Abstractions;
+using Microsoft.Azure.Cosmos.Linq;
 
 namespace AzureGems.Repository.CosmosDB
 {
@@ -60,13 +60,27 @@ namespace AzureGems.Repository.CosmosDB
 			return response.Result;
 		}
 
-		public async Task<IEnumerable<TDomainEntity>> GetAll()
+        public async Task<IEnumerable<TResult>> Query<TResult>(string partitionKey, Expression<Func<IQueryable<TDomainEntity>, IQueryable<TResult>>> queryExpression)
+        {
+            IQueryable<TDomainEntity> query = Container.GetByLinq<TDomainEntity>(partitionKey);
+            IQueryable<TResult> q = queryExpression.Compile().Invoke(query);
+            return await Resolve(q);
+        }
+        
+        public async Task<IEnumerable<TDomainEntity>> GetAll()
 		{
 			CosmosDbResponse<IEnumerable<TDomainEntity>> response = await Container.GetAll<TDomainEntity>();
 			return response.Result ?? [];
 		}
 
-		public async Task<IEnumerable<TDomainEntity>> Get(Expression<Func<TDomainEntity, bool>> predicate)
+        public async Task<IEnumerable<TDomainEntity>> GetAll(string partitionKey)
+        {
+            CosmosDbResponse<IEnumerable<TDomainEntity>> response =
+                await Container.GetByQuery<TDomainEntity>(partitionKey, "SELECT * FROM c");
+            return response.Result ?? [];
+        }
+
+        public async Task<IEnumerable<TDomainEntity>> Get(Expression<Func<TDomainEntity, bool>> predicate)
 		{
 			IQueryable<TDomainEntity> query = Container.GetByLinq<TDomainEntity>()
 				.Where(predicate);
@@ -75,13 +89,29 @@ namespace AzureGems.Repository.CosmosDB
 			return response.Result ?? [];
 		}
 
-		public async Task<TDomainEntity?> GetById(string id)
+        public async Task<IEnumerable<TDomainEntity>> Get(string partitionKey, Expression<Func<TDomainEntity, bool>> predicate)
+        {
+            IQueryable<TDomainEntity> query = Container.GetByLinq<TDomainEntity>()
+                // add the predicate
+                .Where(predicate);
+
+            CosmosDbResponse<IEnumerable<TDomainEntity>> response =
+                await Container.GetByQuery<TDomainEntity>(partitionKey, query.ToQueryDefinition().QueryText);
+            return response.Result ?? [];
+        }
+
+        public async Task<IEnumerable<TDomainEntity>> GetByQuery(string partitionKey, string query)
+        {
+            CosmosDbResponse<IEnumerable<TDomainEntity>> response = await Container.GetByQuery<TDomainEntity>(partitionKey, query);
+            return response.Result ?? [];
+        }
+
+        public async Task<TDomainEntity?> GetById(string id)
 		{
 			// TODO: Passing id as pk is not the correct approach!
 			CosmosDbResponse<TDomainEntity> response = await Container.Get<TDomainEntity>(id, id);
 			if (response.Result is null)
 			{
-				Debug.WriteLine($"Could not find entity by id: [{id}]");
 				return default;
 			}
 			return response.Result;
@@ -92,7 +122,6 @@ namespace AzureGems.Repository.CosmosDB
 			CosmosDbResponse<TDomainEntity> response = await Container.Get<TDomainEntity>(partitionKey, id);
 			if (response.Result is null)
 			{
-				Debug.WriteLine($"Could not find entity by pk/id: [{partitionKey}/{id}]");
 				return default;
 			}
 			return response.Result;
@@ -124,8 +153,6 @@ namespace AzureGems.Repository.CosmosDB
 			TDomainEntity? entity = (await Get(q => q.Id == id)).SingleOrDefault();
 			if (entity is null)
 			{
-				// TODO: Logging
-				Debug.WriteLine($"Could not find entity by id to delete: [{id}]");
 				return false;
 			}
 
@@ -135,7 +162,6 @@ namespace AzureGems.Repository.CosmosDB
 		public async Task<bool> Delete(string partitionKeyValue, string id)
 		{
 			CosmosDbResponse<TDomainEntity> deletedEntity = await Container.Delete<TDomainEntity>(partitionKeyValue, id);
-			// todo: logging
 			return deletedEntity.IsSuccessful;
 		}
 
@@ -147,7 +173,6 @@ namespace AzureGems.Repository.CosmosDB
 			}
 			
 			CosmosDbResponse<TDomainEntity> deletedEntity = await Container.Delete<TDomainEntity>(ResolvePartitionKeyValue(entity), entity.Id);
-			// todo: logging
 			return deletedEntity.IsSuccessful;
 		}
 
@@ -171,5 +196,17 @@ namespace AzureGems.Repository.CosmosDB
 			}
 			return updatedEntity.Result;
 		}
-	}
+
+        public async Task<IEnumerable<TResult>> ExecuteQuery<TResult>(string partitionKey, string query)
+        {
+            CosmosDbResponse<IEnumerable<TResult>> response = await Container.GetByQuery<TResult>(partitionKey, query);
+            return response.Result ?? [];
+        }
+
+        public async Task<IEnumerable<TResult>> ExecuteQuery<TResult>(string query)
+        {
+            CosmosDbResponse<IEnumerable<TResult>> response = await Container.GetByQuery<TResult>(query);
+            return response.Result ?? [];
+        }
+    }
 }
