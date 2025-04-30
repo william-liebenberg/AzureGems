@@ -75,8 +75,7 @@ namespace AzureGems.Repository.CosmosDB
 
         public async Task<IEnumerable<TDomainEntity>> GetAll(string partitionKey)
         {
-            CosmosDbResponse<IEnumerable<TDomainEntity>> response =
-                await Container.GetByQuery<TDomainEntity>(partitionKey, "SELECT * FROM c");
+            CosmosDbResponse<IEnumerable<TDomainEntity>> response = await Container.GetAll<TDomainEntity>(partitionKey);
             return response.Result ?? [];
         }
 

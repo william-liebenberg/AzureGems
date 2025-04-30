@@ -197,8 +197,68 @@ namespace AzureGems.CosmosDB
 
 			return response;
 		}
-		
-		public Task<CosmosDbResponse<IEnumerable<T>>> GetByQuery<T>(string query)
+
+        public async Task<CosmosDbResponse<IEnumerable<T>>> GetAll<T>(string partitionKey)
+        {
+            var options = new QueryRequestOptions();
+
+            if (!string.IsNullOrWhiteSpace(partitionKey))
+            {
+                options.PartitionKey = new PartitionKey(partitionKey);
+            }
+            return await GetAll<T>(options);
+        }
+
+        public async Task<CosmosDbResponse<IEnumerable<T>>> GetAll<T>(QueryRequestOptions options)
+        {
+            var response = new CosmosDbResponse<IEnumerable<T>>();
+            var results = new List<T>();
+
+            Stopwatch watch = Stopwatch.StartNew();
+            QueryDefinition def = null;
+            if (Definition.QueryByDiscriminator)
+            {
+                def = new QueryDefinition($"select * from c where c.discriminator = '{Definition.EntityType.Name}'");
+            }
+
+            try
+            {
+                FeedIterator<T> resultSet = _sdkContainer.GetItemQueryIterator<T>(def, null, options);
+                while (resultSet.HasMoreResults)
+                {
+                    FeedResponse<T> feedResponse = await resultSet.ReadNextAsync();
+                    results.AddRange(feedResponse);
+
+                    response.RequestCharge += feedResponse.RequestCharge;
+                    response.ActivityId = feedResponse.ActivityId;
+                    response.ETag = feedResponse.ETag;
+                    response.Diagnostics = feedResponse.Diagnostics.ToString();
+                }
+
+                watch.Stop();
+
+                response.ExecutionTime = watch.Elapsed;
+                response.StatusCode = HttpStatusCode.OK;
+            }
+            catch (CosmosException cex)
+            {
+                watch.Stop();
+                response.Error = cex;
+                response.ActivityId = cex.ActivityId;
+                response.StatusCode = cex.StatusCode;
+                response.RequestCharge += cex.RequestCharge;
+                response.Diagnostics = cex.Diagnostics.ToString();
+            }
+            finally
+            {
+                response.ExecutionTime = watch.Elapsed;
+                response.Result = results;
+            }
+
+            return response;
+        }
+
+        public Task<CosmosDbResponse<IEnumerable<T>>> GetByQuery<T>(string query)
 		{
 			return GetByQuery<T>(null, query, null);
 		}
