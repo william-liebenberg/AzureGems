@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Azure.Cosmos;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -24,8 +25,11 @@ namespace AzureGems.CosmosDB
 		Task<CosmosDbResponse<IEnumerable<T>>> GetByQuery<T>(string partitionKey, string query, IReadOnlyDictionary<string, object> parameters);
 
 		Task<CosmosDbResponse<IEnumerable<T>>> GetAll<T>();
+        Task<CosmosDbResponse<IEnumerable<T>>> GetAll<T>(string partitionKey);
+        Task<CosmosDbResponse<IEnumerable<T>>> GetAll<T>(QueryRequestOptions options);
 
-		IQueryable<T> GetByLinq<T>();
+
+        IQueryable<T> GetByLinq<T>();
 		IQueryable<T> GetByLinq<T>(string partitionKey);
 		
 		Task<CosmosDbResponse<IEnumerable<T>>> Resolve<T>(IQueryable<T> query);

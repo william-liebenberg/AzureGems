@@ -24,13 +24,13 @@ namespace AzureGems.CosmosDB
 
 		private readonly ICosmosDbContainerFactory? _containerFactory;
 
-		private readonly ConcurrentDictionary<string, ICosmosDbContainer> _containerCache = [];
+		private readonly ConcurrentDictionary<Type, ICosmosDbContainer> _containerCache = [];
 
 		public IEnumerable<ContainerDefinition> ContainerDefinitions => _containerDefinitions;
 
 		public void AddContainerDefinition(ContainerDefinition containerDefinition)
 		{
-			ContainerDefinition? existing = GetContainerDefinition(containerDefinition.ContainerId);
+			ContainerDefinition? existing = GetContainerDefinitionForType(containerDefinition.EntityType);
 			switch (existing)
 			{
 				case null:
@@ -48,12 +48,12 @@ namespace AzureGems.CosmosDB
 		public async Task<ICosmosDbContainer> CreateContainer(ContainerDefinition containerDefinition)
 		{
 			// use GetOrAddAsync to ensure that the container is only created once - we are not using AddOrUpdate because we want to ensure that the container is only created once
-			return await _containerCache.GetOrAddAsync(containerDefinition.ContainerId, async id =>
+			return await _containerCache.GetOrAddAsync(containerDefinition.EntityType, async type =>
 			{
-				ContainerDefinition? definition = GetContainerDefinition(id);
+				ContainerDefinition? definition = GetContainerDefinitionForType(type);
 				if (definition is null)
 				{
-					throw new ContainerDefinitionNotFoundException(id);
+					throw new ContainerDefinitionNotFoundException(type);
 				}
 				
 				Database cosmosSdkDatabase = await GetDatabase();
@@ -205,7 +205,7 @@ namespace AzureGems.CosmosDB
 				return false;
 			}
 
-			if (!_containerCache.TryRemove(containerDefinition.ContainerId, out _))
+			if (!_containerCache.TryRemove(containerDefinition.EntityType, out _))
 			{
 				// container was not removed from cache... this should not happen
 				throw new ContainerDefinitionNotDeletedException(containerDefinition);
